@@ -1,0 +1,4 @@
+.venv
+.vscode
+__pycache__
+random_numbers.bin
