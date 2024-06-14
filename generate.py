@@ -16,7 +16,7 @@ def generate_random_numbers_file(filename, num_integers, max_value=100):
 
 if __name__ == "__main__":
     filename = 'random_numbers.bin'
-    num_integers = 100000000
+    num_integers = 1000000000
     max_value = 10
     generate_random_numbers_file(filename, num_integers, max_value)
 
