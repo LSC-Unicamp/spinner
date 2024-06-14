@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <vector>
 
 /*
 This program opens a buffer and count occurrence of 5's.
@@ -62,8 +63,9 @@ int main(int argc, char *argv[]) {
   {
 #pragma omp single
     {
+      printf("Number of worker threads: %d\n",omp_get_thread_num());
       for (int i = 0; i < task_count; i++) {
-#pragma omp task nowait firstprivate(i) shared(total_count) shared(filename)
+#pragma omp task firstprivate(i) shared(total_count) shared(filename)
         {
           const long int offset = i * chunk_size;
           const long int end =
@@ -75,10 +77,11 @@ int main(int argc, char *argv[]) {
           fseek(_file, offset, SEEK_SET);
 
           int _count = 0;
+
+          std::vector<char> c(read_step);
           for (long int j = offset; j < end; j += read_step) {
             auto min = std::min(end - j, (long)read_step);
-            unsigned char c[min];
-            fread(c, 1, min, _file);
+            fread(c.data(), 1, min, _file);
             for (int k = 0; k < min; k++) {
               if (c[k] == 5) {
                 _count++;
