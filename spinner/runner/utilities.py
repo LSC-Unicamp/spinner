@@ -17,15 +17,20 @@ def run_benchmarks(config):
     bench_metadata = bench_config["metadata"]
     bench_metadata["start_timestamp"] = str(pd.Timestamp.now())
 
+    input_file = bench_metadata["input_file"]
+    input_file_size = os.path.getsize(input_file)
+
+    bench_metadata["input_file_size"] = input_file_size
+
     # Iterate over settings in bench_config, excluding metadata
     bench_names = [
         bench_name for bench_name in bench_config if bench_name != "metadata"
     ]
 
-    rprint(f"Running benchmarks for {bench_names}")
+    # rprint(f"Running benchmarks for {bench_names}")
 
     # Each benchmark has different parameters, so we must add all outputs to the execution dataframe.
-    rprint(bench_config)
+    # rprint(bench_config)
 
     # Get all parameters from each bench
     parameters = list(
@@ -35,6 +40,11 @@ def run_benchmarks(config):
     columns = list(itertools.chain(["name"], parameters, ["time"]))
 
     execution_df = pd.DataFrame(columns=columns)
+
+    # TODO: move this somewhere else
+    bench_runners = {
+        "mpi-io": MPIRunner,
+    }
 
     with Progress() as progress:
         # Helper function to update progress
@@ -51,7 +61,19 @@ def run_benchmarks(config):
         progress_callback = partial(_update_progress, progress, bench_task, value=1)
 
         for bench_name in bench_names:
-            rprint(f"Running benchmark {bench_name}")
+            if bench_name not in bench_runners:
+                rprint(f"[red]WARNING: runner for {bench_name} not found")
+                continue
+
+            instance_runner = bench_runners[bench_name](
+                execution_df,
+                bench_config["metadata"],
+                bench_config[bench_name],
+                progress_callback,
+            )
+
+            instance_runner.run()
+
             progress_callback()
 
     bench_metadata["end_timestamp"] = str(pd.Timestamp.now())
