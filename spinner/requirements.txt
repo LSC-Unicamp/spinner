@@ -1,1 +1,8 @@
 click==8.1.7
+numpy==1.21.4
+pandas==2.2.2
+matplotlib==3.9.0
+rich==13.7.1
+seaborn==0.13.2
+black==24.4.2
+jupyter==1.0.0

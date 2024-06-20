@@ -2,3 +2,5 @@
 .vscode
 __pycache__
 random_numbers.bin
+gmon.out
+sd_env.sh
