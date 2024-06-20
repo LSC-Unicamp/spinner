@@ -1,0 +1,38 @@
+{
+    "metadata": {
+        "description": "I/O benchmarks",
+        "version": "1.0",
+        "runs": 3,
+        "timeout": 600,
+        "input_file": "random_numbers.bin"
+    },
+    "omp-tasks": {
+        "tasks": [
+            1,
+            2,
+            32,
+            64
+        ],
+        "read_steps": [
+            100,
+            100000,
+            1000000
+        ]
+    },
+    "mpi-io": {
+        "nodes": [
+            1,
+            2
+        ],
+        "procs": [
+            1,
+            8,
+            32
+        ],
+        "read_steps": [
+            100,
+            100000,
+            1000000
+        ]
+    }
+}
