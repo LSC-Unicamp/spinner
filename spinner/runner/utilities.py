@@ -1,5 +1,8 @@
 import os
 from functools import partial
+from runner.mpi_io.mpi_runner import MPIRunner
+import itertools
+import pickle
 from rich.progress import Progress
 from rich import print as rprint
 import pandas as pd
@@ -10,83 +13,49 @@ def run_benchmarks(config):
     """
     Generate execution matrix from input configuration and run all benchmarks.
     """
-    rprint(f"Reading configuration from {config}")
     bench_config = json.load(open(config))
-    rprint(bench_config)
     bench_metadata = bench_config["metadata"]
+    bench_metadata["start_timestamp"] = str(pd.Timestamp.now())
 
-    exit(0)
-    # list repositories in the repos_path
-    repos = [
-        r
-        for r in os.listdir(repos_path)
-        if os.path.isdir(os.path.join(repos_path, r)) and not r.startswith(".")
+    # Iterate over settings in bench_config, excluding metadata
+    bench_names = [
+        bench_name for bench_name in bench_config if bench_name != "metadata"
     ]
 
-    repos = sorted(repos)
-    if repo_list:
-        repos = [r for r in repos if r in repo_list]
-        rprint(f"Warning: Running only repos: {repo_list}")
+    rprint(f"Running benchmarks for {bench_names}")
 
-    assert "base" in repos, "Base repo not found"
+    # Each benchmark has different parameters, so we must add all outputs to the execution dataframe.
+    rprint(bench_config)
 
-    # Move 'base' to the front of the list
-    repos.remove("base")
-    repos.insert(0, "base")
-
-    # Create execution dataframe with header: Student name, Student repo, exercise name, instance, serial or parallel, time, speedup, reason
-    execution_df = pd.DataFrame(
-        columns=[
-            "student_name",
-            "student_repo",
-            "exercise_name",
-            "instance",
-            "output",
-            "type",
-            "time",
-            "speedup",
-            "reason",
-        ]
+    # Get all parameters from each bench
+    parameters = list(
+        itertools.chain(*[list(bench_config[bench].keys()) for bench in bench_names])
     )
+
+    columns = list(itertools.chain(["name"], parameters, ["time"]))
+
+    execution_df = pd.DataFrame(columns=columns)
 
     with Progress() as progress:
         # Helper function to update progress
-        def _update_progress(progress, tasks, value=1):
-            for task in tasks:
-                progress.advance(task, advance=value)
+        def _update_progress(progress, task, value=1):
+            progress.advance(task, advance=value)
 
         # Main progress bar
-        repos_task = progress.add_task(
-            "[cyan]Processing benchmarks...",
-            # All repos * all exercises * n_runs + serial in base repo
-            total=float(len(repos) * len(exercises) * n_runs),
+        bench_task = progress.add_task(
+            "[cyan]Running benchmarks",
+            # TODO calculate total
+            total=100,
         )
 
-        # Per repo progress bar
-        assignments_task = progress.add_task("...")
+        progress_callback = partial(_update_progress, progress, bench_task, value=1)
 
-        for repo_name in repos:
-            bar_description = f"[magenta]Running benchmarks in {repo_name}..."
+        for bench_name in bench_names:
+            rprint(f"Running benchmark {bench_name}")
+            progress_callback()
 
-            run_serial = True if repo_name == "base" else False
-
-            progress.reset(
-                assignments_task,
-                total=float(len(exercises) * n_runs),
-                description=bar_description,
-            )
-
-            progress_callback = partial(
-                _update_progress, progress, [assignments_task, repos_task]
-            )
-
-            for exercise in exercises:
-                exercise_runner = exercises_runners[exercise]
-                exercise_runner(
-                    repos_path,
-                    student_name="base",
-                    n_runs=n_runs,
-                ).run(timeout, progress_callback)
+    bench_metadata["end_timestamp"] = str(pd.Timestamp.now())
 
     rprint(execution_df)
-    execution_df.to_pickle("execution_df.pkl")
+    with open("bench_metadata.pkl", "wb") as f:
+        pickle.dump(bench_metadata, f)

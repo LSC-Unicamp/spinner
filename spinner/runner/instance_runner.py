@@ -7,25 +7,15 @@ import pandas as pd
 import time
 
 
-class ExerciseRunner:
+class InstanceRunner:
     """
-    Base class to handle the general case execution of exercises.
-
-    Attributes:
-        execution_df (DataFrame): Data frame containing execution details.
-        repos_path (str): Path to the repositories.
-        exercise_name (str): Name of the exercise.
-        n_runs (int): Number of runs to execute (default is 5).
-        run_env (str, optional): The environment in which to run the exercises.
+    Base class to handle the general case execution of benchmarks.
     """
 
     def __init__(
         self,
         execution_df,
-        repos_path,
-        exercise_name,
-        n_runs=5,
-        run_env=None,
+        nruns,
     ):
         self.repos_path = repos_path
         self.exercise_name = exercise_name
@@ -39,7 +29,7 @@ class ExerciseRunner:
     def check_output(self, outputs):
         assert False, "Not implemented by subclass"
 
-    def run_command(self, cmd, timeout=60):
+    def run_command(self, cmd, timeout):
         """Runs a command and returns the output, time and return code"""
         cwd = os.path.join(self.repos_path, self.student_repo, self.exercise_name)
         cwd = os.path.abspath(cwd)
@@ -57,7 +47,7 @@ class ExerciseRunner:
                 cwd=cwd,
                 env=self.run_env,
             )
-            stdout, stderr = process.communicate(timeout=timeout)
+            stdout, stderr = process.communicate(timeout)
             returncode = process.returncode
             stderr = stderr.decode()
             stdout = stdout.decode()
