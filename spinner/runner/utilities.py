@@ -22,6 +22,7 @@ def run_benchmarks(config):
     input_file_size = os.path.getsize(input_file)
 
     bench_metadata["input_file_size"] = input_file_size
+    # TODO: include lfs getstripe in metadata as well
 
     # Iterate over settings in bench_config, excluding metadata
     bench_names = [
@@ -65,7 +66,7 @@ def run_benchmarks(config):
         # Main progress bar
         bench_task = progress.add_task(
             "[cyan]Running benchmarks",
-            total=100,
+            total=0,
         )
 
         # Handle to progress bar updates

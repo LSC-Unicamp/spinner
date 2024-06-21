@@ -4,7 +4,29 @@
         "version": "1.0",
         "runs": 3,
         "timeout": 600,
-        "input_file": "random_numbers.bin"
+        "input_file": "random_numbers.bin",
+        "omp-tasks": {
+            "build": {
+                "cmake_flags": "-DCMAKE_BUILD_TYPE=Release",
+                "make_flags": "-j",
+                "env": {
+                    "CC": "gcc",
+                    "CXX": "g++"
+                },
+                "path": "benchs/omp-tasks"
+            }
+        },
+        "mpi-io": {
+            "build": {
+                "cmake_flags": "-DCMAKE_BUILD_TYPE=Release",
+                "make_flags": "-j",
+                "env": {
+                    "CC": "mpicc",
+                    "CXX": "mpicxx"
+                }
+            },
+            "path": "benchs/mpi-io"
+        }
     },
     "omp-tasks": {
         "tasks": [

@@ -27,8 +27,11 @@ class InstanceRunner:
         if "env" not in self.config:
             self.config["env"] = None
 
-    def get_run_instruction(self):
-        assert False, "Not implemented by subclass"
+    def get_bench_name(self) -> str:
+        raise NotImplementedError
+
+    def get_run_instruction(self) -> list:
+        raise NotImplementedError
 
     def check_output(self, output) -> bool:
         # TODO check the output

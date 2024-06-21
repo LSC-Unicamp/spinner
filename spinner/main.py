@@ -1,6 +1,7 @@
 import click
 from rich import print as rprint
 from runner.utilities import run_benchmarks
+from runner.instance_builder import build_all
 from generator.rand_int import generate_random_numbers_file as generate_rand_file
 
 
@@ -36,13 +37,13 @@ def main(build, run, export, config, gen, gensize, output_file):
         exit(0)
 
     if build:
-        assert False, "Not implemented"
+        build_all(config)
 
     if run:
         run_benchmarks(config)
 
     if export:
-        assert False, "Not implemented"
+        raise NotImplementedError
 
 
 if __name__ == "__main__":
