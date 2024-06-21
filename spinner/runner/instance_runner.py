@@ -53,6 +53,8 @@ class InstanceRunner:
                     "time": None,
                 }
 
+                rprint(curr_df_entry)
+
                 output, error, elapsed_time, return_code = self.run_command(
                     cmd, self.metadata["timeout"]
                 )

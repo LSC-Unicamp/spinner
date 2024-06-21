@@ -31,8 +31,8 @@ class MPIRunner(InstanceRunner):
                         {
                             "cmd": cmd,
                             "parameters": {
-                                "n_procs": n_procs,
-                                "n_nodes": n_nodes,
+                                "procs": n_procs,
+                                "nodes": n_nodes,
                                 "read_step": read_step,
                             },
                         }
