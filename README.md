@@ -50,6 +50,14 @@ format_python_files() {
     else
         echo "black not found, skipping Python file formatting."
     fi
+    if command -v black >/dev/null 2>&1; then
+        for file in $(git diff --cached --name-only --diff-filter=ACM "$against" | grep -E '\.ipynb$'); do
+            black "$file"
+            git add "$file"
+        done
+    else
+        echo "black for notebook not found, skipping Python file formatting."
+    fi
 }
 
 # Function to clear output in Jupyter notebooks
