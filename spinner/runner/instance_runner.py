@@ -24,29 +24,63 @@ class InstanceRunner:
         self.config = config
         self.progress_callback = progress_callback
 
+        if "env" not in self.config:
+            self.config["env"] = None
+
     def get_run_instruction(self):
         assert False, "Not implemented by subclass"
 
-    def check_output(self, outputs):
-        assert False, "Not implemented by subclass"
+    def check_output(self, output) -> bool:
+        # TODO check the output
+        rprint("[red] Check output not implemented!")
+        return True
+
+    def run(self):
+        """Runs the exercise and stores the results in self.results"""
+        run_cmds = self.get_run_instruction()
+
+        # Run serial commands first (so we can calculate speedup)
+        for cmd in run_cmds:
+            rprint(self.config)
+            rprint(self.metadata)
+            for i in range(self.metadata["runs"]):
+                self.progress_callback(value=1 / len(run_cmds))
+
+                curr_df_entry = {
+                    "name": self.get_bench_name(),
+                    **cmd["parameters"],
+                    "time": None,
+                }
+
+                output, error, elapsed_time, return_code = self.run_command(
+                    cmd, self.metadata["timeout"]
+                )
+
+                if not return_code == 0:
+                    rprint(f"-> Error running command: {cmd['command']}\n{error}")
+                    continue
+
+                if not self.check_output(output):
+                    rprint(f"-> Output incorrect: {output}")
+                    continue
+
+                # Append run to execution_df
+                curr_df_entry["time"] = elapsed_time
+                self.execution_df.loc[len(self.execution_df)] = curr_df_entry
 
     def run_command(self, cmd, timeout):
         """Runs a command and returns the output, time and return code"""
-        cwd = os.path.join(self.repos_path, self.student_repo, self.exercise_name)
-        cwd = os.path.abspath(cwd)
-
-        rprint(f" -> Running {cmd['command']}\n     in: {cwd}")
+        rprint(f" -> Running command: {cmd['cmd']}")
 
         start_time = time.time()
-
         try:
             process = subprocess.Popen(
-                cmd["command"],
+                cmd["cmd"],
                 shell=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                cwd=cwd,
-                env=self.run_env,
+                # cwd=cwd,
+                env=self.config["env"],
             )
             stdout, stderr = process.communicate(timeout)
             returncode = process.returncode
@@ -82,54 +116,3 @@ class InstanceRunner:
             elapsed_time,
             returncode,
         )
-
-    def run(self):
-        """Runs the exercise and stores the results in self.results"""
-        run_cmds = self.get_run_instruction()
-
-        # Run serial commands first (so we can calculate speedup)
-        for cmd in run_cmds:
-            rprint(self.config)
-            rprint(self.metadata)
-            for i in range(self.metadata["runs"]):
-                self.progress_callback(1 / len(run_cmds))
-
-                rprint(f"Run {i+1}/{self.n_runs}")
-                curr_df_entry = {
-                    "name": self.get_bench_name(),
-                    **cmd["parameters"],
-                }
-
-                if not self.assert_binary(cmd["command"]):
-                    rprint(f"-> Failed to compile {cmd['command']}")
-                    curr_df_entry["reason"] = "Failed to compile"
-                    df.loc[len(df)] = curr_df_entry
-                    continue
-
-                if cmd_failed:
-                    rprint(f"-> Skipping command: {cmd['command']}")
-                    rprint(f"-> Previous execution failed")
-                    continue
-
-                output, error, elapsed_time, return_code = self.run_command(
-                    cmd, timeout=timeout
-                )
-
-                if not return_code == 0:
-                    rprint(f"-> Error running command: {cmd['command']}\n{error}")
-                    curr_df_entry["reason"] = "Non-zero exit code"
-                    df.loc[len(df)] = curr_df_entry
-
-                    cmd_failed = True
-                    continue
-
-                if not self.check_output(output, cmd):
-                    rprint(f"-> Output incorrect: {output}")
-                    curr_df_entry["reason"] = "Incorrect output"
-                    df.loc[len(df)] = curr_df_entry
-                    cmd_failed = True
-                    continue
-
-                # Append run to execution_df
-                curr_df_entry["time"] = elapsed_time
-                df.loc[len(df)] = curr_df_entry
