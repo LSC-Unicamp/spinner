@@ -11,10 +11,10 @@ class MPIRunner(InstanceRunner):
 
     def get_run_instruction(self):
         instructions = []
-        for n_nodes in self.config["nodes"]:
-            for n_procs in self.config["procs"]:
+        for nodes in self.config["nodes"]:
+            for procs in self.config["procs"]:
                 for read_step in self.config["read_step"]:
-                    ppn = n_procs // n_nodes
+                    ppn = procs // nodes
                     if ppn == 0:
                         # rprint(f"Skipping n_procs={n_procs}, n_nodes={n_nodes} since ppn=0")
                         continue
@@ -26,13 +26,13 @@ class MPIRunner(InstanceRunner):
                         bin_path
                     ), f"Binary path {bin_path} does not exist"
 
-                    cmd = f"mpirun -np {n_procs} -ppn {ppn} {bin_path} {input_file} {read_step}"
+                    cmd = f"mpirun -np {procs} -ppn {ppn} {bin_path} {input_file} {read_step}"
                     instructions.append(
                         {
                             "cmd": cmd,
                             "parameters": {
-                                "procs": n_procs,
-                                "nodes": n_nodes,
+                                "procs": procs,
+                                "nodes": nodes,
                                 "read_step": read_step,
                             },
                         }
