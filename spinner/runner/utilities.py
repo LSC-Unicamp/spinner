@@ -98,4 +98,4 @@ def run_benchmarks(config):
 
     rprint(execution_df)
     with open("bench_metadata.pkl", "wb") as f:
-        pickle.dump(bench_metadata, f)
+        pickle.dump({"metadata": bench_metadata, "dataframe": execution_df}, f)
