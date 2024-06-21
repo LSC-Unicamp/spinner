@@ -1,6 +1,7 @@
 import os
 from functools import partial
 from runner.mpi_io.mpi_runner import MPIRunner
+from runner.omp_tasks.omp_runner import OmpRunner
 import itertools
 import pickle
 from rich.progress import Progress
@@ -44,21 +45,38 @@ def run_benchmarks(config):
     # TODO: move this somewhere else
     bench_runners = {
         "mpi-io": MPIRunner,
+        "omp-tasks": OmpRunner,
     }
 
     with Progress() as progress:
         # Helper function to update progress
-        def _update_progress(progress, task, value=1):
-            progress.advance(task, advance=value)
+        def _update_progress(
+            progress, task, value=None, total=None, increment_total=None
+        ):
+            if total is not None:
+                progress.update(task, total=total)
+            if value is not None:
+                progress.advance(task, advance=value)
+            if increment_total is not None:
+                progress.update(
+                    task, total=progress.tasks[task].total + increment_total
+                )
 
         # Main progress bar
         bench_task = progress.add_task(
             "[cyan]Running benchmarks",
-            # TODO calculate total
             total=100,
         )
 
-        progress_callback = partial(_update_progress, progress, bench_task, value=1)
+        # Handle to progress bar updates
+        progress_callback = partial(
+            _update_progress,
+            progress,
+            bench_task,
+            value=None,
+            total=None,
+            increment_total=None,
+        )
 
         for bench_name in bench_names:
             if bench_name not in bench_runners:

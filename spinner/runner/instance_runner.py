@@ -38,13 +38,12 @@ class InstanceRunner:
     def run(self):
         """Runs the exercise and stores the results in self.results"""
         run_cmds = self.get_run_instruction()
+        self.progress_callback(increment_total=(len(run_cmds) * self.metadata["runs"]))
 
         # Run serial commands first (so we can calculate speedup)
         for cmd in run_cmds:
-            rprint(self.config)
-            rprint(self.metadata)
             for i in range(self.metadata["runs"]):
-                self.progress_callback(value=1 / len(run_cmds))
+                self.progress_callback(value=1)
 
                 curr_df_entry = {
                     "name": self.get_bench_name(),
@@ -57,7 +56,7 @@ class InstanceRunner:
                 )
 
                 if not return_code == 0:
-                    rprint(f"-> Error running command: {cmd['command']}\n{error}")
+                    rprint(f"-> Error running command: {cmd['cmd']}\n{error}")
                     continue
 
                 if not self.check_output(output):
