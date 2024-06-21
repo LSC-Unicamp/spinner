@@ -10,7 +10,7 @@ import pandas as pd
 import json
 
 
-def run_benchmarks(config):
+def run_benchmarks(config, hosts):
     """
     Generate execution matrix from input configuration and run all benchmarks.
     """
@@ -22,6 +22,8 @@ def run_benchmarks(config):
     input_file_size = os.path.getsize(input_file)
 
     bench_metadata["input_file_size"] = input_file_size
+    bench_metadata["hosts"] = hosts
+
     # TODO: include lfs getstripe in metadata as well
 
     # Iterate over settings in bench_config, excluding metadata
