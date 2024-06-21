@@ -1,10 +1,15 @@
 import random
 import struct
+from time import sleep
 from rich import print as rprint
 
 
 def generate_random_numbers_file(num_integers, filename, max_value=10):
     count = 0
+    expected_size = num_integers * 4 / (1024 * 1024)
+    rprint(f"About to generate a file of size: {expected_size} MB...")
+    sleep(5)
+
     with open(filename, "wb") as f:
         for _ in range(num_integers):
             number = random.randint(0, max_value)

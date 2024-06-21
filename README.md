@@ -14,6 +14,8 @@ source .venv/bin/activate
 ## Running
 ```sh
 python3 spinner/main.py -b F -r T -c spinner/bench_settings.json -e F
+
+python3 spinner/main.py -g T -s 1000000000 -o random_numbers.bin -r T -c spinner/bench_settings.json -e T -h "sdumont[6174-6177]"
 ```
 
 # Mandatory development policy
