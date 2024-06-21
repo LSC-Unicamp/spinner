@@ -5,3 +5,4 @@ random_numbers.bin
 gmon.out
 sd_env.sh
 *.pkl
+*.html

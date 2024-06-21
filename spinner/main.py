@@ -1,7 +1,9 @@
 import click
 from rich import print as rprint
+import os
 from runner.utilities import run_benchmarks
 from runner.instance_builder import build_all
+from exporter.exporter import run_reporter
 from generator.rand_int import generate_random_numbers_file as generate_rand_file
 
 
@@ -17,7 +19,7 @@ from generator.rand_int import generate_random_numbers_file as generate_rand_fil
 @click.option("--gen", "-g", default=False, type=bool, help="Generate input files")
 @click.option("--gensize", "-s", default=None, type=int, help="Gerated input file size")
 @click.option("--output", "-o", default=None, type=str, help="Output file")
-@click.option("--run", "-r", default=True, type=bool, help="Run all benchmarks")
+@click.option("--run", "-r", default=False, type=bool, help="Run all benchmarks")
 @click.option(
     "--export", "-e", default=True, type=bool, help="Export results to report.html"
 )
@@ -43,7 +45,8 @@ def main(build, run, export, config, gen, gensize, output_file):
         run_benchmarks(config)
 
     if export:
-        raise NotImplementedError
+        reporter_notebook_path = os.path.abspath("spinner/reporter.ipynb")
+        run_reporter(reporter_notebook_path, "report.html")
 
 
 if __name__ == "__main__":
