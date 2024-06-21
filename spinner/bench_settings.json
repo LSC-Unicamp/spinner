@@ -7,8 +7,12 @@
         "input_file": "random_numbers.bin",
         "omp-tasks": {
             "build": {
-                "cmake_flags": "-DCMAKE_BUILD_TYPE=Release",
-                "make_flags": "-j",
+                "cmake_flags": [
+                    "-DCMAKE_BUILD_TYPE=Release"
+                ],
+                "make_flags": [
+                    "-j"
+                ],
                 "env": {
                     "CC": "gcc",
                     "CXX": "g++"
@@ -18,14 +22,18 @@
         },
         "mpi-io": {
             "build": {
-                "cmake_flags": "-DCMAKE_BUILD_TYPE=Release",
-                "make_flags": "-j",
+                "cmake_flags": [
+                    "-DCMAKE_BUILD_TYPE=Release"
+                ],
+                "make_flags": [
+                    "-j"
+                ],
                 "env": {
                     "CC": "mpicc",
                     "CXX": "mpicxx"
-                }
-            },
+                },
             "path": "benchs/mpi-io"
+            }
         }
     },
     "omp-tasks": {

@@ -66,7 +66,6 @@ def run_benchmarks(config):
         # Main progress bar
         bench_task = progress.add_task(
             "[cyan]Running benchmarks",
-            total=0,
         )
 
         # Handle to progress bar updates

@@ -1,7 +1,6 @@
 import subprocess
 import os
 import signal
-from rich.progress import Progress
 from rich import print as rprint
 import pandas as pd
 import time
