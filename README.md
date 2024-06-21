@@ -6,7 +6,8 @@
 
 ```sh
 python3 -m virtualenv .venv
-pip install -r spinner/requirements.txt
+python3 -m pip install pip --upgrade
+python3 -m pip install -r spinner/requirements.txt
 source .venv/bin/activate
 ```
 
