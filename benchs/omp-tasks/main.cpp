@@ -63,7 +63,6 @@ int main(int argc, char *argv[]) {
   {
 #pragma omp single
     {
-      printf("Number of worker threads: %d\n",omp_get_thread_num());
       for (int i = 0; i < task_count; i++) {
 #pragma omp task firstprivate(i) shared(total_count) shared(filename)
         {
