@@ -1,4 +1,4 @@
-# io-testbed
+# Spinner
 
 ![Logo](spinner.svg)
 
