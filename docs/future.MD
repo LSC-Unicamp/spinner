@@ -2,6 +2,20 @@
 
 This contains our view of the Spinner application, when ready.
 
+## Possible usages
+
+```sh
+spinner --use-slurm sorgan.json --group-jobs-by nodes,repetition -c benchmark.json -r T
+```
+
+This will launch one separeted Slurm job per input configuration, but inputs that are repetition (for each nrun) and inputs with specific number of nodes will be aggregated on the same slurm job.
+
+```sh
+spinner --use-slurm sorgan.json --group-jobs-by nodes,repetition -c benchmark.json -r T --dry-run --assert-environmnet
+```
+
+This will assert that the enrivonment is corret: LD_LIBRARY_PATH, if binaries are there, if we have the permissions on the partitions. There is a fixed list, common to all benchmarks, and a list that inherited classes can provide, additionaly. The dry-run flag make it so nothing is actually ran, only reported.
+
 
 ## Features
 
