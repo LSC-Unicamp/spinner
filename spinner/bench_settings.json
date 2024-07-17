@@ -18,6 +18,9 @@
                     "CXX": "g++"
                 },
                 "path": "benchs/omp-tasks"
+            },
+            "command": {
+                "template": "./omp-tasks -n {{tasks}} -r {{read_step}} -i {{input_file}}"
             }
         },
         "mpi-io": {
@@ -32,43 +35,30 @@
                     "CC": "mpicc",
                     "CXX": "mpicxx"
                 },
-            "path": "benchs/mpi-io"
+            "path": "benchs/mpi-io",
+            "command": {
+                "template": "mpirun -np {{procs}} ./mpi-io -n {{nodes}} -r {{read_step}} -i {{input_file}}"
+            }
             }
         }
     },
     "omp-tasks": {
         "tasks": [
-            1,
-            2,
-            32,
-            64
+            1
         ],
         "read_step": [
-            100,
-            100000,
-            1000000
+            100
         ]
     },
     "mpi-io": {
         "nodes": [
-            1,
-            2,
-            3,
-            4,
-            5,
-            6,
-            7,
-            8
+            1
         ],
         "procs": [
-            1,
-            8,
-            32
+            1
         ],
         "read_step": [
-            100,
-            100000,
-            1000000
+            100
         ]
     }
 }
