@@ -4,6 +4,19 @@ import signal
 from rich import print as rprint
 import pandas as pd
 import time
+import itertools
+from jinja2 import Template, Environment, Undefined
+
+
+class StrictUndefined(Undefined):
+    def __getattr__(self, name):
+        raise NameError(f"'{name}' is undefined")
+
+    def __getitem__(self, name):
+        raise NameError(f"'{name}' is undefined")
+
+    def __str__(self):
+        raise NameError(f"'{self._undefined_name}' is undefined")
 
 
 class InstanceRunner:
@@ -29,7 +42,45 @@ class InstanceRunner:
         raise NotImplementedError
 
     def get_run_instruction(self) -> list:
-        raise NotImplementedError
+        instructions = []
+
+        parameter_list = self.sweep_parameters.keys()
+        parameter_combinations = list(
+            itertools.product(
+                *[self.sweep_parameters[param] for param in parameter_list]
+            )
+        )
+        parameter_combinations = (
+            dict(zip(parameter_list, comb)) for comb in parameter_combinations
+        )
+
+        for parameters in parameter_combinations:
+            rprint(f"self.metadata: {self.metadata}")
+            command_info = self.metadata["omp-tasks"]["command"]
+            template_string = command_info["template"]
+            rprint(f"command_template: {template_string}")
+
+            env = Environment(undefined=StrictUndefined)
+            template = env.from_string(template_string)
+
+            command = template.render(
+                self.metadata | parameters | self.metadata["omp-tasks"]
+            )
+            rprint(f"rendered command: {command}")
+
+            # check if the command exists
+            assert os.path.exists(
+                command.split()[0]
+            ), f"Command {command} does not exist"
+
+            instructions.append(
+                {
+                    "cmd": command,
+                    "parameters": parameters,
+                }
+            )
+
+        return instructions
 
     def check_output(self, output) -> bool:
         # TODO check the output
