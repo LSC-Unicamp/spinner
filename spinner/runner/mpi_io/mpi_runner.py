@@ -13,9 +13,9 @@ class MPIRunner(InstanceRunner):
 
     def get_run_instruction(self):
         instructions = []
-        for nodes in self.config["nodes"]:
-            for procs in self.config["procs"]:
-                for read_step in self.config["read_step"]:
+        for nodes in self.sweep_parameters["nodes"]:
+            for procs in self.sweep_parameters["procs"]:
+                for read_step in self.sweep_parameters["read_step"]:
                     ppn = procs // nodes
                     input_file = self.metadata["input_file"]
                     input_file = os.path.abspath(input_file)

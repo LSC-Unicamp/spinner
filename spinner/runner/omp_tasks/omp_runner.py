@@ -2,6 +2,7 @@ from runner.instance_runner import InstanceRunner
 import os
 from rich import print as rprint
 from jinja2 import Template, Environment, Undefined
+import itertools
 
 
 # TODO move this to an utility function
@@ -25,40 +26,41 @@ class OmpRunner(InstanceRunner):
 
     def get_run_instruction(self):
         instructions = []
-        for n_tasks in self.config["tasks"]:
-            for read_step in self.config["read_step"]:
-                input_file = self.metadata["input_file"]
-                rprint(f"self.metadata: {self.metadata}")
-                command_info = self.metadata["omp-tasks"]["command"]
-                template_string = command_info["template"]
-                rprint(f"command_template: {template_string}")
-                input_file = os.path.abspath(input_file)
 
-                env = Environment(undefined=StrictUndefined)
-                template = env.from_string(template_string)
+        parameter_list = self.sweep_parameters.keys()
+        parameter_combinations = list(
+            itertools.product(
+                *[self.sweep_parameters[param] for param in parameter_list]
+            )
+        )
+        parameter_combinations = (
+            dict(zip(parameter_list, comb)) for comb in parameter_combinations
+        )
 
-                bench_path = self.metadata["omp-tasks"]["bench_path"]
+        for parameters in parameter_combinations:
+            rprint(f"self.metadata: {self.metadata}")
+            command_info = self.metadata["omp-tasks"]["command"]
+            template_string = command_info["template"]
+            rprint(f"command_template: {template_string}")
 
-                command = template.render(
-                    input_file=input_file,
-                    tasks=n_tasks,  # TODO: rename for consistency
-                    read_step=read_step,
-                    bench_path=bench_path,
-                )
-                rprint(f"rendered command: {command}")
+            env = Environment(undefined=StrictUndefined)
+            template = env.from_string(template_string)
 
-                # check if the command exists
-                assert os.path.exists(
-                    command.split()[0]
-                ), f"Command {command} does not exist"
+            command = template.render(
+                self.metadata | parameters | self.metadata["omp-tasks"]
+            )
+            rprint(f"rendered command: {command}")
 
-                instructions.append(
-                    {
-                        "cmd": command,
-                        "parameters": {
-                            "tasks": n_tasks,
-                            "read_step": read_step,
-                        },
-                    }
-                )
+            # check if the command exists
+            assert os.path.exists(
+                command.split()[0]
+            ), f"Command {command} does not exist"
+
+            instructions.append(
+                {
+                    "cmd": command,
+                    "parameters": parameters,
+                }
+            )
+
         return instructions

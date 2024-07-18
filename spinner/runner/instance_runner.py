@@ -15,16 +15,15 @@ class InstanceRunner:
         self,
         execution_df,
         metadata,
-        config,
+        sweep_parameters,
         progress_callback,
+        runner_env=None,
     ):
         self.execution_df = execution_df
         self.metadata = metadata
-        self.config = config
+        self.sweep_parameters = sweep_parameters
         self.progress_callback = progress_callback
-
-        if "env" not in self.config:
-            self.config["env"] = None
+        self.runner_env = runner_env
 
     def get_bench_name(self) -> str:
         raise NotImplementedError
@@ -84,7 +83,7 @@ class InstanceRunner:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 # cwd=cwd,
-                env=self.config["env"],
+                env=self.runner_env,
             )
             stdout, stderr = process.communicate(timeout)
             returncode = process.returncode
