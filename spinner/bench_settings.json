@@ -2,7 +2,7 @@
     "metadata": {
         "description": "I/O benchmarks",
         "version": "1.0",
-        "runs": 30,
+        "runs": 2,
         "timeout": 600,
         "input_file": "random_numbers.bin",
         "omp-tasks": {

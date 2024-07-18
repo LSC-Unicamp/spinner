@@ -52,6 +52,11 @@ class OmpRunner(InstanceRunner):
                 )
                 rprint(f"rendered command: {command}")
 
+                # check if the command exists
+                assert os.path.exists(
+                    command.split()[0]
+                ), f"Command {command} does not exist"
+
                 # cmd = f"{bin_path} -f {input_file} -t {n_tasks} -r {read_step}"
                 instructions.append(
                     {
