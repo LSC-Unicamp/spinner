@@ -6,7 +6,6 @@
         "timeout": 600,
         "input_file": "random_numbers.bin",
         "omp-tasks": {
-            "path": "benchs/omp-tasks",
             "base_path": "benchs/omp-tasks",
             "env": {
                 "CC": "gcc",
@@ -31,8 +30,7 @@
             }
         },
         "mpi-io": {
-            "path": "benchs/mpi-io",
-            "base_path": "benchs/omp-tasks",
+            "base_path": "benchs/mpi-io",
             "env": {
                 "CC": "mpicc",
                 "CXX": "mpicxx"
