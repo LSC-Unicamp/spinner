@@ -32,28 +32,30 @@ class OmpRunner(InstanceRunner):
                 template_string = command_info["template"]
                 rprint(f"command_template: {template_string}")
                 input_file = os.path.abspath(input_file)
-                bin_path = "./benchs/omp-tasks/build/lustre1"
-                bin_path = os.path.abspath(bin_path)
-                assert os.path.exists(
-                    bin_path
-                ), f"Binary path {bin_path} does not exist"
+
+                # bin_path = "./benchs/omp-tasks/build/lustre1"
+                # bin_path = os.path.abspath(bin_path)
+                # assert os.path.exists(
+                #     bin_path
+                # ), f"Binary path {bin_path} does not exist"
 
                 env = Environment(undefined=StrictUndefined)
                 template = env.from_string(template_string)
 
+                base_path = self.metadata["omp-tasks"]["build"]["path"]
+
                 command = template.render(
-                    bin_path=bin_path,
                     input_file=input_file,
-                    tasks=n_tasks,  # rename for consistency
+                    tasks=n_tasks,  # TODO: rename for consistency
                     read_step=read_step,
+                    base_path=base_path,
                 )
                 rprint(f"rendered command: {command}")
-                exit(1)
 
-                cmd = f"{bin_path} -f {input_file} -t {n_tasks} -r {read_step}"
+                # cmd = f"{bin_path} -f {input_file} -t {n_tasks} -r {read_step}"
                 instructions.append(
                     {
-                        "cmd": cmd,
+                        "cmd": command,
                         "parameters": {
                             "tasks": n_tasks,
                             "read_step": read_step,

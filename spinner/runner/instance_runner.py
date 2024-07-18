@@ -73,7 +73,8 @@ class InstanceRunner:
 
     def run_command(self, cmd, timeout):
         """Runs a command and returns the output, time and return code"""
-        rprint(f" -> Running command: {cmd['cmd']}")
+        rprint(f"-> Running command: {cmd['cmd']}")
+        rprint(f"-> Path: {os.getcwd()}")
 
         start_time = time.time()
         try:
@@ -91,20 +92,20 @@ class InstanceRunner:
             stdout = stdout.decode()
 
         except subprocess.TimeoutExpired as e:
-            rprint(f" -> Command timeout after {timeout} seconds")
+            rprint(f"-> Command timeout after {timeout} seconds")
             process.kill()
             process.communicate()
             returncode = -1  # Typically, -1 indicates a timeout error
             stderr = f"Timeout error (limit: {timeout}s)"
             stdout = ""
-            rprint(f" -> Killing children group {process.pid}")
+            rprint(f"-> Killing children group {process.pid}")
             try:
                 os.killpg(os.getpgid(process.pid), signal.SIGTERM)
             except ProcessLookupError:
                 rprint(
-                    f" -> Failed to kill children group {process.pid}, probably already dead"
+                    f"-> Failed to kill children group {process.pid}, probably already dead"
                 )
-            rprint(f" -> Done killing children group {process.pid}")
+            rprint(f"-> Done killing children group {process.pid}")
 
         end_time = time.time()
         elapsed_time = end_time - start_time

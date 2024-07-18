@@ -27,6 +27,7 @@ class MPIRunner(InstanceRunner):
 
                     if self.metadata["hosts"] is None:
                         rprint("[red]Warning: No hosts provided, running MPI locally")
+                        host_num = 1
                     else:
                         host_list = self.metadata["hosts"]
                         # expand list using scontrol show hostname "sdumont[xxxx]"

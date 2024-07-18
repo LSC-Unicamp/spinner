@@ -20,7 +20,7 @@
                 "path": "benchs/omp-tasks"
             },
             "command": {
-                "template": "./omp-tasks -n {{tasks}} -r {{read_step}} -i {{input_file}}"
+                "template": "{{base_path}}/build/lustre1 -t {{tasks}} -r {{read_step}} -f {{input_file}}"
             }
         },
         "mpi-io": {
