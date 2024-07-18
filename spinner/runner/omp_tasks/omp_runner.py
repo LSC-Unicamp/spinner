@@ -4,6 +4,7 @@ from rich import print as rprint
 from jinja2 import Template, Environment, Undefined
 
 
+# TODO move this to an utility function
 class StrictUndefined(Undefined):
     def __getattr__(self, name):
         raise NameError(f"'{name}' is undefined")

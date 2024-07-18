@@ -4,6 +4,19 @@ import subprocess
 from rich import print as rprint
 from rich.progress import Progress
 import json
+from jinja2 import Template, Environment, Undefined
+
+
+# TODO: move this to an utility function
+class StrictUndefined(Undefined):
+    def __getattr__(self, name):
+        raise NameError(f"'{name}' is undefined")
+
+    def __getitem__(self, name):
+        raise NameError(f"'{name}' is undefined")
+
+    def __str__(self):
+        raise NameError(f"'{self._undefined_name}' is undefined")
 
 
 def build_all(config):
@@ -37,38 +50,36 @@ class InstanceBuilder:
         orig_dir = os.getcwd()
 
         # move to bench directory
-        os.chdir(self.meta_info["path"])
+        assert os.path.exists(
+            self.meta_info["path"]
+        ), f"Path {self.meta_info['path']} does not exist"
+        # os.chdir(self.meta_info["path"])
 
-        # delete 'build' folder, if exists
-        build_dir = os.path.join(os.getcwd(), "build")
-
-        if os.path.exists(build_dir):
-            shutil.rmtree(build_dir)
-
-        os.makedirs(build_dir)
-
-        os.chdir(build_dir)
-
+        # save original environment variables
         original_vars = os.environ.copy()
+
+        # set environment variables
         env_vars = os.environ.copy()
         env_vars.update(self.meta_info["env"])
-        cmake_flags = self.meta_info["build"]["cmake_flags"]
-        make_flags = self.meta_info["build"]["make_flags"]
 
-        cmake_command = ["cmake", ".."] + cmake_flags
-        make_command = ["make"] + make_flags
+        env = Environment(undefined=StrictUndefined)
+        for build_instruction in self.meta_info["build_instructions"]:
+            rprint(f"Building {build_instruction}")
+            cmd = env.from_string(build_instruction["command"]).render(self.meta_info)
+            cwd = env.from_string(build_instruction["cwd"]).render(self.meta_info)
+            rprint(f"Running command: {cmd} in {cwd}")
 
-        result = subprocess.run(
-            cmake_command, env=env_vars, check=True, capture_output=True, text=True
-        )
-        rprint(result.stdout)
-        rprint(result.stderr)
-
-        result = subprocess.run(
-            make_command, env=env_vars, check=True, capture_output=True, text=True
-        )
-        rprint(result.stdout)
-        rprint(result.stderr)
+            result = subprocess.run(
+                cmd,
+                cwd=cwd,
+                env=env_vars,
+                check=True,
+                shell=True,
+                capture_output=True,
+                text=True,
+            )
+            rprint(result.stdout)
+            rprint(result.stderr)
 
         # restore original environment variables
         os.environ = original_vars
