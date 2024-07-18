@@ -5,7 +5,7 @@ authors = [
     {name = "Jhonatan Cléto", email="j256444@dac.unicamp.br"}
 ]
 version = "0.0.1"
-requires-python = ">=3.10, <4"
+requires-python = ">=3.9.12, <4"
 dependencies = [
     "click==8.1.7",
     "pandas==2.2.2",
@@ -24,6 +24,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "black==24.4.2",
+    "black[jupyter]==24.4.2",
     "isort==5.13.2",
     "taskipy==1.13.0"
 ]
