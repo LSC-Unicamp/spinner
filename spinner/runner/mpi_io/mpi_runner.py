@@ -8,9 +8,6 @@ class MPIRunner(InstanceRunner):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def get_bench_name(self):
-        return "mpi-io"
-
     def get_run_instruction(self):
         instructions = []
         for nodes in self.sweep_parameters["nodes"]:

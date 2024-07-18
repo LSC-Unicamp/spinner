@@ -26,20 +26,19 @@ class InstanceRunner:
 
     def __init__(
         self,
+        bench_name,
         execution_df,
         metadata,
         sweep_parameters,
         progress_callback,
         runner_env=None,
     ):
+        self.bench_name = bench_name
         self.execution_df = execution_df
         self.metadata = metadata
         self.sweep_parameters = sweep_parameters
         self.progress_callback = progress_callback
         self.runner_env = runner_env
-
-    def get_bench_name(self) -> str:
-        raise NotImplementedError
 
     def get_run_instruction(self) -> list:
         instructions = []
@@ -98,7 +97,7 @@ class InstanceRunner:
                 self.progress_callback(value=1)
 
                 curr_df_entry = {
-                    "name": self.get_bench_name(),
+                    "name": self.bench_name,
                     **cmd["parameters"],
                     "time": None,
                 }

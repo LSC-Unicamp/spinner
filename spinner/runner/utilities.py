@@ -1,7 +1,7 @@
 import os
 from functools import partial
 from runner.mpi_io.mpi_runner import MPIRunner
-from runner.omp_tasks.omp_runner import OmpRunner
+from runner.instance_runner import InstanceRunner
 import itertools
 import pickle
 from rich.progress import Progress
@@ -48,7 +48,7 @@ def run_benchmarks(config, hosts):
     # TODO: move this somewhere else
     bench_runners = {
         "mpi-io": MPIRunner,
-        "omp-tasks": OmpRunner,
+        "omp-tasks": InstanceRunner,
     }
 
     with Progress() as progress:
@@ -86,6 +86,7 @@ def run_benchmarks(config, hosts):
                 continue
 
             instance_runner = bench_runners[bench_name](
+                bench_name,
                 execution_df,
                 bench_config["metadata"],
                 bench_config[bench_name],
