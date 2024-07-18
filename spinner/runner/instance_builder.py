@@ -19,7 +19,7 @@ def build_all(config):
     with Progress() as progress:
         task = progress.add_task("Building benchmarks", total=len(bench_names))
         for bench in bench_names:
-            meta_info = config["metadata"][bench]["build"]
+            meta_info = config["metadata"][bench]
             builder = bench_builder[bench](meta_info)
 
             builder.build()
@@ -52,8 +52,8 @@ class InstanceBuilder:
         original_vars = os.environ.copy()
         env_vars = os.environ.copy()
         env_vars.update(self.meta_info["env"])
-        cmake_flags = self.meta_info["cmake_flags"]
-        make_flags = self.meta_info["make_flags"]
+        cmake_flags = self.meta_info["build"]["cmake_flags"]
+        make_flags = self.meta_info["build"]["make_flags"]
 
         cmake_command = ["cmake", ".."] + cmake_flags
         make_command = ["make"] + make_flags
