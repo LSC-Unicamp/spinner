@@ -37,13 +37,13 @@ class OmpRunner(InstanceRunner):
                 env = Environment(undefined=StrictUndefined)
                 template = env.from_string(template_string)
 
-                base_path = self.metadata["omp-tasks"]["build"]["path"]
+                bench_path = self.metadata["omp-tasks"]["bench_path"]
 
                 command = template.render(
                     input_file=input_file,
                     tasks=n_tasks,  # TODO: rename for consistency
                     read_step=read_step,
-                    base_path=base_path,
+                    bench_path=bench_path,
                 )
                 rprint(f"rendered command: {command}")
 

@@ -6,7 +6,7 @@
         "timeout": 600,
         "input_file": "random_numbers.bin",
         "omp-tasks": {
-            "base_path": "benchs/omp-tasks",
+            "bench_path": "benchs/omp-tasks",
             "env": {
                 "CC": "gcc",
                 "CXX": "g++"
@@ -14,23 +14,23 @@
             "build_instructions": [
                 {
                     "command": "mkdir -p build",
-                    "cwd": "{{base_path}}"
+                    "cwd": "{{bench_path}}"
                 },
                 {
                     "command": "cmake .. -DCMAKE_BUILD_TYPE=Release",
-                    "cwd": "{{base_path}}/build"
+                    "cwd": "{{bench_path}}/build"
                 },
                 {
                     "command": "make -j",
-                    "cwd": "{{base_path}}/build"
+                    "cwd": "{{bench_path}}/build"
                 }
             ],
             "command": {
-                "template": "{{base_path}}/build/lustre1 -t {{tasks}} -r {{read_step}} -f {{input_file}}"
+                "template": "{{bench_path}}/build/lustre1 -t {{tasks}} -r {{read_step}} -f {{input_file}}"
             }
         },
         "mpi-io": {
-            "base_path": "benchs/mpi-io",
+            "bench_path": "benchs/mpi-io",
             "env": {
                 "CC": "mpicc",
                 "CXX": "mpicxx"
@@ -38,15 +38,15 @@
             "build_instructions": [
                 {
                     "command": "mkdir -p build",
-                    "cwd": "{{base_path}}"
+                    "cwd": "{{bench_path}}"
                 },
                 {
                     "command": "cmake .. -DCMAKE_BUILD_TYPE=Release",
-                    "cwd": "{{base_path}}/build"
+                    "cwd": "{{bench_path}}/build"
                 },
                 {
                     "command": "make -j",
-                    "cwd": "{{base_path}}/build"
+                    "cwd": "{{bench_path}}/build"
                 }
             ],
             "command": {

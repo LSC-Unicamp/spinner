@@ -44,16 +44,15 @@ class InstanceBuilder:
         self.meta_info = meta_info
 
     def build(self) -> None:
-        rprint(f"Building in path {self.meta_info['path']}")
+        rprint(f"Building in path {self.meta_info['bench_path']}")
         rprint(self.meta_info)
         # get current directory
         orig_dir = os.getcwd()
 
         # move to bench directory
         assert os.path.exists(
-            self.meta_info["path"]
-        ), f"Path {self.meta_info['path']} does not exist"
-        # os.chdir(self.meta_info["path"])
+            self.meta_info["bench_path"]
+        ), f"Path {self.meta_info['bench_path']} does not exist"
 
         # save original environment variables
         original_vars = os.environ.copy()
