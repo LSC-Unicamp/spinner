@@ -5,6 +5,7 @@ from rich import print as rprint
 import pandas as pd
 import time
 import itertools
+import shutil
 from jinja2 import Template, Environment, Undefined
 
 
@@ -40,9 +41,7 @@ class InstanceRunner:
         self.progress_callback = progress_callback
         self.runner_env = runner_env
 
-    def get_run_instruction(self) -> list:
-        instructions = []
-
+    def get_parameter_combinations(self):
         parameter_list = self.sweep_parameters.keys()
         parameter_combinations = list(
             itertools.product(
@@ -53,9 +52,17 @@ class InstanceRunner:
             dict(zip(parameter_list, comb)) for comb in parameter_combinations
         )
 
-        for parameters in parameter_combinations:
+        return parameter_combinations
+
+    def get_run_instruction(self) -> list:
+        instructions = []
+
+        parameter_combinations = self.get_parameter_combinations()
+        # rprint(f"Parameter combinations for {self.bench_name}: {list(parameter_combinations)}")
+
+        for parameters in list(parameter_combinations):
             rprint(f"self.metadata: {self.metadata}")
-            command_info = self.metadata["omp-tasks"]["command"]
+            command_info = self.metadata[self.bench_name]["command"]
             template_string = command_info["template"]
             rprint(f"command_template: {template_string}")
 
@@ -63,14 +70,13 @@ class InstanceRunner:
             template = env.from_string(template_string)
 
             command = template.render(
-                self.metadata | parameters | self.metadata["omp-tasks"]
+                self.metadata | parameters | self.metadata[self.bench_name]
             )
             rprint(f"rendered command: {command}")
 
             # check if the command exists
-            assert os.path.exists(
-                command.split()[0]
-            ), f"Command {command} does not exist"
+            if shutil.which(command.split()[0]) is None:
+                raise FileNotFoundError(f"Command {command.split()[0]} does not exist")
 
             instructions.append(
                 {

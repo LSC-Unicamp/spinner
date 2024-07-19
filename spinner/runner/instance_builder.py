@@ -23,17 +23,11 @@ def build_all(config):
     config = json.load(open(config))
     bench_names = [bench_name for bench_name in config if bench_name != "metadata"]
 
-    # TODO: move this somewhere else
-    bench_builder = {
-        "mpi-io": InstanceBuilder,
-        "omp-tasks": InstanceBuilder,
-    }
-
     with Progress() as progress:
         task = progress.add_task("Building benchmarks", total=len(bench_names))
         for bench in bench_names:
             meta_info = config["metadata"][bench]
-            builder = bench_builder[bench](meta_info)
+            builder = InstanceBuilder(meta_info)
 
             builder.build()
             progress.update(task, advance=1)

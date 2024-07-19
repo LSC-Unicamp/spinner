@@ -50,7 +50,7 @@
                 }
             ],
             "command": {
-                "template": "mpirun -np {{procs}} ./mpi-io -n {{nodes}} -r {{read_step}} -i {{input_file}}"
+                "template": "mpirun -np {{procs}} -ppn {{ppn}} -hosts {{hosts}} {{bench_path}}/build/mpi_io_count {{input_file}} {{read_step}}"
             }
         }
     },
@@ -69,7 +69,8 @@
             1
         ],
         "procs": [
-            1
+            1,
+            2
         ],
         "read_step": [
             100
