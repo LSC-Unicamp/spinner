@@ -58,7 +58,6 @@ class InstanceRunner:
         instructions = []
 
         parameter_combinations = self.get_parameter_combinations()
-        # rprint(f"Parameter combinations for {self.bench_name}: {list(parameter_combinations)}")
 
         for parameters in list(parameter_combinations):
             rprint(f"self.metadata: {self.metadata}")
@@ -97,7 +96,6 @@ class InstanceRunner:
         run_cmds = self.get_run_instruction()
         self.progress_callback(increment_total=(len(run_cmds) * self.metadata["runs"]))
 
-        # Run serial commands first (so we can calculate speedup)
         for cmd in run_cmds:
             for i in range(self.metadata["runs"]):
                 self.progress_callback(value=1)
