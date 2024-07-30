@@ -1,0 +1,51 @@
+metadata:
+  description: I/O benchmarks
+  version: "1.0"
+  runs: 2
+  timeout: 600
+  input_file: random_numbers.bin
+  omp-tasks:
+    bench_path: benchs/omp-tasks
+    env:
+      CC: gcc
+      CXX: g++
+    build_instructions:
+      - command: mkdir -p build
+        cwd: "{{bench_path}}"
+      - command: cmake .. -DCMAKE_BUILD_TYPE=Release
+        cwd: "{{bench_path}}/build"
+      - command: make -j
+        cwd: "{{bench_path}}/build"
+    command:
+      template: "{{bench_path}}/build/lustre1 -t {{tasks}} -r {{read_step}} -f {{input_file}}"
+  mpi-io:
+    bench_path: benchs/mpi-io
+    env:
+      CC: mpicc
+      CXX: mpicxx
+    build_instructions:
+      - command: mkdir -p build
+        cwd: "{{bench_path}}"
+      - command: cmake .. -DCMAKE_BUILD_TYPE=Release
+        cwd: "{{bench_path}}/build"
+      - command: make -j
+        cwd: "{{bench_path}}/build"
+    command:
+      template: "mpirun -np {{procs}} -ppn {{ppn}} -hosts {{hosts}} {{bench_path}}/build/mpi_io_count {{input_file}} {{read_step}}"
+
+omp-tasks:
+  tasks:
+    - 1
+    - 2
+  read_step:
+    - 100
+    - 101
+
+mpi-io:
+  nodes:
+    - 1
+  procs:
+    - 1
+    - 2
+  read_step:
+    - 100
