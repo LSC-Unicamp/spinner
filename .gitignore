@@ -1,11 +1,11 @@
 .venv
 .vscode
-__pycache__
 random_numbers.bin
 gmon.out
 sd_env.sh
 *.pkl
 *.html
+output/
 
 ### Python ###
 # Byte-compiled / optimized / DLL files

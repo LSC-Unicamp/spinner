@@ -23,6 +23,8 @@ def run_benchmarks(config, hosts):
 
     bench_metadata["input_file_size"] = input_file_size
     bench_metadata["hosts"] = hosts
+    bench_metadata["runner_hostname"] = str(os.uname()[1])
+    bench_metadata["start_env"] = str(os.environ.copy())
 
     # TODO: include lfs getstripe in metadata as well
 
@@ -97,6 +99,7 @@ def run_benchmarks(config, hosts):
             progress_callback()
 
     bench_metadata["end_timestamp"] = str(pd.Timestamp.now())
+    bench_metadata["end_env"] = str(os.environ.copy())
 
     rprint(execution_df)
     with open("bench_metadata.pkl", "wb") as f:
