@@ -1,7 +1,7 @@
 import os
 from functools import partial
 from runner.mpi_io.mpi_runner import MPIRunner
-from runner.omp_tasks.omp_runner import OmpRunner
+from runner.instance_runner import InstanceRunner
 import itertools
 import pickle
 from rich.progress import Progress
@@ -26,19 +26,12 @@ def run_benchmarks(config, hosts):
     bench_metadata["runner_hostname"] = str(os.uname()[1])
     bench_metadata["start_env"] = str(os.environ.copy())
 
-    # TODO: include lfs getstripe in metadata as well
-
     # Iterate over settings in bench_config, excluding metadata
     bench_names = [
         bench_name for bench_name in bench_config if bench_name != "metadata"
     ]
 
-    # rprint(f"Running benchmarks for {bench_names}")
-
-    # Each benchmark has different parameters, so we must add all outputs to the execution dataframe.
-    # rprint(bench_config)
-
-    # Get all parameters from each bench
+    # Get all parameters from each bench and create a list of columns
     parameters = list(
         itertools.chain(*[list(bench_config[bench].keys()) for bench in bench_names])
     )
@@ -50,7 +43,7 @@ def run_benchmarks(config, hosts):
     # TODO: move this somewhere else
     bench_runners = {
         "mpi-io": MPIRunner,
-        "omp-tasks": OmpRunner,
+        "omp-tasks": InstanceRunner,
     }
 
     with Progress() as progress:
@@ -83,11 +76,15 @@ def run_benchmarks(config, hosts):
         )
 
         for bench_name in bench_names:
-            if bench_name not in bench_runners:
-                rprint(f"[red]WARNING: runner for {bench_name} not found")
-                continue
+            if bench_name in bench_runners:
+                runner_class = bench_runners[bench_name]
 
-            instance_runner = bench_runners[bench_name](
+            else:
+                rprint(f"[red]WARNING: {bench_name} using default runner")
+                runner_class = InstanceRunner
+
+            instance_runner = runner_class(
+                bench_name,
                 execution_df,
                 bench_config["metadata"],
                 bench_config[bench_name],

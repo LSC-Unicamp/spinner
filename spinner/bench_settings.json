@@ -2,73 +2,78 @@
     "metadata": {
         "description": "I/O benchmarks",
         "version": "1.0",
-        "runs": 30,
+        "runs": 2,
         "timeout": 600,
         "input_file": "random_numbers.bin",
         "omp-tasks": {
-            "build": {
-                "cmake_flags": [
-                    "-DCMAKE_BUILD_TYPE=Release"
-                ],
-                "make_flags": [
-                    "-j"
-                ],
-                "env": {
-                    "CC": "gcc",
-                    "CXX": "g++"
+            "bench_path": "benchs/omp-tasks",
+            "env": {
+                "CC": "gcc",
+                "CXX": "g++"
+            },
+            "build_instructions": [
+                {
+                    "command": "mkdir -p build",
+                    "cwd": "{{bench_path}}"
                 },
-                "path": "benchs/omp-tasks"
+                {
+                    "command": "cmake .. -DCMAKE_BUILD_TYPE=Release",
+                    "cwd": "{{bench_path}}/build"
+                },
+                {
+                    "command": "make -j",
+                    "cwd": "{{bench_path}}/build"
+                }
+            ],
+            "command": {
+                "template": "{{bench_path}}/build/lustre1 -t {{tasks}} -r {{read_step}} -f {{input_file}}"
             }
         },
         "mpi-io": {
-            "build": {
-                "cmake_flags": [
-                    "-DCMAKE_BUILD_TYPE=Release"
-                ],
-                "make_flags": [
-                    "-j"
-                ],
-                "env": {
-                    "CC": "mpicc",
-                    "CXX": "mpicxx"
+            "bench_path": "benchs/mpi-io",
+            "env": {
+                "CC": "mpicc",
+                "CXX": "mpicxx"
+            },
+            "build_instructions": [
+                {
+                    "command": "mkdir -p build",
+                    "cwd": "{{bench_path}}"
                 },
-            "path": "benchs/mpi-io"
+                {
+                    "command": "cmake .. -DCMAKE_BUILD_TYPE=Release",
+                    "cwd": "{{bench_path}}/build"
+                },
+                {
+                    "command": "make -j",
+                    "cwd": "{{bench_path}}/build"
+                }
+            ],
+            "command": {
+                "template": "mpirun -np {{procs}} -ppn {{ppn}} -hosts {{hosts}} {{bench_path}}/build/mpi_io_count {{input_file}} {{read_step}}"
             }
         }
     },
     "omp-tasks": {
         "tasks": [
             1,
-            2,
-            32,
-            64
+            2
         ],
         "read_step": [
             100,
-            100000,
-            1000000
+            101
         ]
     },
     "mpi-io": {
         "nodes": [
-            1,
-            2,
-            3,
-            4,
-            5,
-            6,
-            7,
-            8
+            1
         ],
         "procs": [
             1,
-            8,
-            32
+            2
         ],
         "read_step": [
-            100,
-            100000,
-            1000000
+            100
         ]
     }
 }

@@ -4,6 +4,20 @@ import signal
 from rich import print as rprint
 import pandas as pd
 import time
+import itertools
+import shutil
+from jinja2 import Template, Environment, Undefined
+
+
+class StrictUndefined(Undefined):
+    def __getattr__(self, name):
+        raise NameError(f"'{name}' is undefined")
+
+    def __getitem__(self, name):
+        raise NameError(f"'{name}' is undefined")
+
+    def __str__(self):
+        raise NameError(f"'{self._undefined_name}' is undefined")
 
 
 class InstanceRunner:
@@ -13,24 +27,64 @@ class InstanceRunner:
 
     def __init__(
         self,
+        bench_name,
         execution_df,
         metadata,
-        config,
+        sweep_parameters,
         progress_callback,
+        runner_env=None,
     ):
+        self.bench_name = bench_name
         self.execution_df = execution_df
         self.metadata = metadata
-        self.config = config
+        self.sweep_parameters = sweep_parameters
         self.progress_callback = progress_callback
+        self.runner_env = runner_env
 
-        if "env" not in self.config:
-            self.config["env"] = None
+    def get_parameter_combinations(self):
+        parameter_list = self.sweep_parameters.keys()
+        parameter_combinations = list(
+            itertools.product(
+                *[self.sweep_parameters[param] for param in parameter_list]
+            )
+        )
+        parameter_combinations = (
+            dict(zip(parameter_list, comb)) for comb in parameter_combinations
+        )
 
-    def get_bench_name(self) -> str:
-        raise NotImplementedError
+        return parameter_combinations
 
     def get_run_instruction(self) -> list:
-        raise NotImplementedError
+        instructions = []
+
+        parameter_combinations = self.get_parameter_combinations()
+
+        for parameters in list(parameter_combinations):
+            rprint(f"self.metadata: {self.metadata}")
+            command_info = self.metadata[self.bench_name]["command"]
+            template_string = command_info["template"]
+            rprint(f"command_template: {template_string}")
+
+            env = Environment(undefined=StrictUndefined)
+            template = env.from_string(template_string)
+
+            command = template.render(
+                self.metadata | parameters | self.metadata[self.bench_name]
+            )
+            rprint(f"rendered command: {command}")
+
+            # check if the command exists
+            if shutil.which(command.split()[0]) is None:
+                raise FileNotFoundError(f"Command {command.split()[0]} does not exist")
+
+            instructions.append(
+                {
+                    "cmd": command,
+                    "parameters": parameters,
+                }
+            )
+
+        return instructions
 
     def check_output(self, output) -> bool:
         # TODO check the output
@@ -42,13 +96,12 @@ class InstanceRunner:
         run_cmds = self.get_run_instruction()
         self.progress_callback(increment_total=(len(run_cmds) * self.metadata["runs"]))
 
-        # Run serial commands first (so we can calculate speedup)
         for cmd in run_cmds:
             for i in range(self.metadata["runs"]):
                 self.progress_callback(value=1)
 
                 curr_df_entry = {
-                    "name": self.get_bench_name(),
+                    "name": self.bench_name,
                     **cmd["parameters"],
                     "time": None,
                 }
@@ -73,7 +126,8 @@ class InstanceRunner:
 
     def run_command(self, cmd, timeout):
         """Runs a command and returns the output, time and return code"""
-        rprint(f" -> Running command: {cmd['cmd']}")
+        rprint(f"-> Running command: {cmd['cmd']}")
+        rprint(f"-> Path: {os.getcwd()}")
 
         start_time = time.time()
         try:
@@ -83,7 +137,7 @@ class InstanceRunner:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 # cwd=cwd,
-                env=self.config["env"],
+                env=self.runner_env,
             )
             stdout, stderr = process.communicate(timeout)
             returncode = process.returncode
@@ -91,20 +145,20 @@ class InstanceRunner:
             stdout = stdout.decode()
 
         except subprocess.TimeoutExpired as e:
-            rprint(f" -> Command timeout after {timeout} seconds")
+            rprint(f"-> Command timeout after {timeout} seconds")
             process.kill()
             process.communicate()
             returncode = -1  # Typically, -1 indicates a timeout error
             stderr = f"Timeout error (limit: {timeout}s)"
             stdout = ""
-            rprint(f" -> Killing children group {process.pid}")
+            rprint(f"-> Killing children group {process.pid}")
             try:
                 os.killpg(os.getpgid(process.pid), signal.SIGTERM)
             except ProcessLookupError:
                 rprint(
-                    f" -> Failed to kill children group {process.pid}, probably already dead"
+                    f"-> Failed to kill children group {process.pid}, probably already dead"
                 )
-            rprint(f" -> Done killing children group {process.pid}")
+            rprint(f"-> Done killing children group {process.pid}")
 
         end_time = time.time()
         elapsed_time = end_time - start_time
