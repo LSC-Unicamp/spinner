@@ -7,14 +7,14 @@ import pickle
 from rich.progress import Progress
 from rich import print as rprint
 import pandas as pd
-import json
+import yaml
 
 
 def run_benchmarks(config, hosts):
     """
     Generate execution matrix from input configuration and run all benchmarks.
     """
-    bench_config = json.load(open(config))
+    bench_config = yaml.safe_load(open(config))
     bench_metadata = bench_config["metadata"]
     bench_metadata["start_timestamp"] = str(pd.Timestamp.now())
 
