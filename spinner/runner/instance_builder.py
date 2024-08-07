@@ -1,10 +1,11 @@
+import json
 import os
 import shutil
 import subprocess
+
+from jinja2 import Environment, Template, Undefined
 from rich import print as rprint
 from rich.progress import Progress
-import json
-from jinja2 import Template, Environment, Undefined
 
 
 # TODO: move this to an utility function

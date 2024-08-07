@@ -30,7 +30,7 @@ dev = [
 ]
 
 [project.scripts]
-spinner = "main:cli"
+spinner = "cli.main:cli"
 
 [tool.setuptools.packages.find]
 where = ["spinner"]
@@ -38,7 +38,7 @@ include = ["*"]
 
 [tool.isort]
 profile = "black"
-line_lenth = 79
+line_length = 79
 
 [tool.taskipy.tasks]
 lint = "black --check --diff . && isort --check --diff ."

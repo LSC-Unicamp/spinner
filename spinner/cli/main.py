@@ -1,10 +1,13 @@
-import click
-from rich import print as rprint
 import os
-from runner.utilities import run_benchmarks
-from runner.instance_builder import build_all
+
+import click
 from exporter.exporter import run_reporter
-from generator.rand_int import generate_random_numbers_file as generate_rand_file
+from generator.rand_int import (
+    generate_random_numbers_file as generate_rand_file,
+)
+from rich import print as rprint
+from runner.instance_builder import build_all
+from runner.utilities import run_benchmarks
 
 
 @click.command()

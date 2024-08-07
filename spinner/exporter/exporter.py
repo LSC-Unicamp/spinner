@@ -1,6 +1,6 @@
 import nbformat
-from nbconvert.preprocessors import ExecutePreprocessor
 from nbconvert import HTMLExporter
+from nbconvert.preprocessors import ExecutePreprocessor
 
 
 def run_reporter(notebook_path, output_path):
