@@ -1,7 +1,8 @@
-import subprocess
-from runner.instance_runner import InstanceRunner
-from rich import print as rprint
 import itertools
+import subprocess
+
+from rich import print as rprint
+from runner.instance_runner import InstanceRunner
 
 
 class MPIRunner(InstanceRunner):

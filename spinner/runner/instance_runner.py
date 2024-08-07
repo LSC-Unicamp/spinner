@@ -1,12 +1,13 @@
-import subprocess
-import os
-import signal
-from rich import print as rprint
-import pandas as pd
-import time
 import itertools
+import os
 import shutil
-from jinja2 import Template, Environment, Undefined
+import signal
+import subprocess
+import time
+
+import pandas as pd
+from jinja2 import Environment, Template, Undefined
+from rich import print as rprint
 
 
 class StrictUndefined(Undefined):

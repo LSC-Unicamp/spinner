@@ -1,13 +1,14 @@
-import os
-from functools import partial
-from runner.mpi_io.mpi_runner import MPIRunner
-from runner.instance_runner import InstanceRunner
 import itertools
+import os
 import pickle
-from rich.progress import Progress
-from rich import print as rprint
+from functools import partial
+
 import pandas as pd
 import yaml
+from rich import print as rprint
+from rich.progress import Progress
+from runner.instance_runner import InstanceRunner
+from runner.mpi_io.mpi_runner import MPIRunner
 
 
 def run_benchmarks(config, hosts):

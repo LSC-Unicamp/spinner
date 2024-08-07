@@ -28,3 +28,6 @@ jobs:
     - name: Lint with black
       run: |
         task lint
+    - name: Check package binary
+      run: |
+        spinner --help
