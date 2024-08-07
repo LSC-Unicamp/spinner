@@ -47,6 +47,7 @@ format_python_files() {
     if command -v black >/dev/null 2>&1; then
         for file in $(git diff --cached --name-only --diff-filter=ACM "$against" | grep -E '\.py$'); do
             black "$file"
+            isort "$file"
             git add "$file"
         done
     else
@@ -55,6 +56,7 @@ format_python_files() {
     if command -v black >/dev/null 2>&1; then
         for file in $(git diff --cached --name-only --diff-filter=ACM "$against" | grep -E '\.ipynb$'); do
             black "$file"
+            isort "$file"
             git add "$file"
         done
     else
