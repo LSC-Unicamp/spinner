@@ -1,8 +1,8 @@
+import importlib.resources
 import os
 
 import click
-from exporter.exporter import run_reporter
-from rich import print as rprint
+import exporter.exporter as exporter
 from runner.instance_builder import build_all
 from runner.utilities import run_benchmarks
 
@@ -33,8 +33,8 @@ def main(build, run, export, config, hosts):
         run_benchmarks(config, hosts)
 
     if export:
-        reporter_notebook_path = os.path.abspath("spinner/reporter.ipynb")
-        run_reporter(reporter_notebook_path, "report.html")
+        reporter_path = importlib.resources.files("exporter") / "reporter.ipynb"
+        exporter.run_reporter(reporter_path, "report.html", pkl_db_path=os.getcwd())
 
 
 if __name__ == "__main__":
