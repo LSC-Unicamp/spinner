@@ -2,9 +2,6 @@ import os
 
 import click
 from exporter.exporter import run_reporter
-from generator.rand_int import (
-    generate_random_numbers_file as generate_rand_file,
-)
 from rich import print as rprint
 from runner.instance_builder import build_all
 from runner.utilities import run_benchmarks
@@ -19,28 +16,16 @@ from runner.utilities import run_benchmarks
     help="Benchmark configuration file",
 )
 @click.option("--build", "-b", default=False, type=bool, help="Build all benchmarks")
-@click.option("--gen", "-g", default=False, type=bool, help="Generate input files")
-@click.option("--gensize", "-s", default=None, type=int, help="Gerated input file size")
-@click.option("--output", "-o", default=None, type=str, help="Output file")
 @click.option("--run", "-r", default=False, type=bool, help="Run all benchmarks")
 @click.option(
     "--export", "-e", default=True, type=bool, help="Export results to report.html"
 )
 @click.option("--hosts", "-h", default=None, type=str, help="Hosts list")
-def cli(build, run, export, config, gen, gensize, output, hosts):
-    main(build, run, export, config, gen, gensize, output, hosts)
+def cli(build, run, export, config, hosts):
+    main(build, run, export, config, hosts)
 
 
-def main(build, run, export, config, gen, gensize, output_file, hosts):
-    if gen:
-        if not gensize:
-            print("Please provide a size for the generated file")
-            exit(1)
-        if not output_file:
-            print("Please provide an output file")
-            exit(1)
-        generate_rand_file(gensize, output_file)
-
+def main(build, run, export, config, hosts):
     if build:
         build_all(config)
 
