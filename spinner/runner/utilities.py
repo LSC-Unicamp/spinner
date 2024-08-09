@@ -8,7 +8,6 @@ import yaml
 from rich import print as rprint
 from rich.progress import Progress
 from runner.instance_runner import InstanceRunner
-from runner.mpi_io.mpi_runner import MPIRunner
 
 
 def run_benchmarks(config, hosts):
@@ -36,12 +35,6 @@ def run_benchmarks(config, hosts):
     columns = list(itertools.chain(["name"], parameters, ["time"]))
 
     execution_df = pd.DataFrame(columns=columns)
-
-    # TODO: move this somewhere else
-    bench_runners = {
-        "mpi-io": MPIRunner,
-        "omp-tasks": InstanceRunner,
-    }
 
     with Progress() as progress:
         # Helper function to update progress
@@ -73,12 +66,7 @@ def run_benchmarks(config, hosts):
         )
 
         for bench_name in bench_names:
-            if bench_name in bench_runners:
-                runner_class = bench_runners[bench_name]
-
-            else:
-                rprint(f"[red]WARNING: {bench_name} using default runner")
-                runner_class = InstanceRunner
+            runner_class = InstanceRunner
 
             instance_runner = runner_class(
                 bench_name,
