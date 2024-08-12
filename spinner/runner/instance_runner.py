@@ -106,7 +106,10 @@ class InstanceRunner:
                 rprint(curr_df_entry)
 
                 output, error, elapsed_time, return_code = self.run_command(
-                    cmd, self.metadata["timeout"]
+                    cmd,
+                    self.metadata["timeout"],
+                    self.metadata["retry"],
+                    self.metadata["retry_limit"],
                 )
 
                 if not return_code == 0:
@@ -121,43 +124,62 @@ class InstanceRunner:
                 curr_df_entry["time"] = elapsed_time
                 self.execution_df.loc[len(self.execution_df)] = curr_df_entry
 
-    def run_command(self, cmd, timeout):
+    def run_command(self, cmd, timeout: int, retry: bool, retry_limit: int):
         """Runs a command and returns the output, time and return code"""
         rprint(f"-> Running command: {cmd['cmd']}")
         rprint(f"-> Path: {os.getcwd()}")
 
-        start_time = time.time()
-        try:
-            process = subprocess.Popen(
-                cmd["cmd"],
-                shell=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                # cwd=cwd,
-                env=self.runner_env,
-            )
-            stdout, stderr = process.communicate(timeout=timeout)
-            returncode = process.returncode
-            stderr = stderr.decode()
-            stdout = stdout.decode()
+        # Retry logic to run until success
+        remaining_tries = 1
+        if retry and retry_limit > 0:
+            remaining_tries = retry_limit
+            rprint(f"-> Retry enabled with limit {retry_limit}")
+        elif retry and retry_limit <= 0:
+            remaining_tries = float("inf")
+            rprint(f"-> Retry enabled without limit")
+        else:
+            remaining_tries = 1
+            rprint(f"-> Retry disabled")
 
-        except subprocess.TimeoutExpired as e:
-            rprint(f"-> Command timeout after {timeout} seconds")
-            process.kill()
-            process.communicate()
-            returncode = -1  # Typically, -1 indicates a timeout error
-            stderr = f"Timeout error (limit: {timeout}s)"
-            stdout = ""
-            rprint(f"-> Killing children group {process.pid}")
+        finished = False
+        while remaining_tries > 0 and not finished:
+            remaining_tries -= 1
+            start_time = time.time()
             try:
-                os.killpg(os.getpgid(process.pid), signal.SIGTERM)
-            except ProcessLookupError:
-                rprint(
-                    f"-> Failed to kill children group {process.pid}, probably already dead"
+                process = subprocess.Popen(
+                    cmd["cmd"],
+                    shell=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    # cwd=cwd,
+                    env=self.runner_env,
                 )
-            rprint(f"-> Done killing children group {process.pid}")
+                stdout, stderr = process.communicate(timeout=timeout)
+                returncode = process.returncode
+                stderr = stderr.decode()
+                stdout = stdout.decode()
+                finished = True
 
-        end_time = time.time()
+            except subprocess.TimeoutExpired as e:
+                rprint(f"-> Command timeout after {timeout} seconds")
+                finished = False
+                process.kill()
+                process.communicate()
+                returncode = -1  # Typically, -1 indicates a timeout error
+                stderr = f"Timeout error (limit: {timeout}s)"
+                stdout = ""
+                rprint(f"-> Killing children group {process.pid}")
+                try:
+                    os.killpg(os.getpgid(process.pid), signal.SIGTERM)
+                except ProcessLookupError:
+                    rprint(
+                        f"-> Failed to kill children group {process.pid}, probably already dead"
+                    )
+                rprint(f"-> Done killing children group {process.pid}")
+                rprint(f"-> Remaining tries: {remaining_tries}")
+
+            end_time = time.time()
+
         elapsed_time = end_time - start_time
         rprint(f"-> stderr = {stderr}")
         rprint(f"-> stdout = {stdout}")
