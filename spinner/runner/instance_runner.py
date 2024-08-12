@@ -136,7 +136,7 @@ class InstanceRunner:
                 # cwd=cwd,
                 env=self.runner_env,
             )
-            stdout, stderr = process.communicate(timeout)
+            stdout, stderr = process.communicate(timeout=timeout)
             returncode = process.returncode
             stderr = stderr.decode()
             stdout = stdout.decode()
