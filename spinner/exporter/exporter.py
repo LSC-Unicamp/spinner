@@ -15,6 +15,7 @@ def run_reporter(notebook_path, output_path, pkl_db_path=None):
         ].source = f"""
         # Default locations if parameter not passed
         benchmark_data_path = "{pkl_db_path}/bench_metadata.pkl"
+        output_folder = "{pkl_db_path}/output"
         """
 
     # Set up the notebook execution configuration
