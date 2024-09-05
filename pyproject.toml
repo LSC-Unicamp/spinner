@@ -30,6 +30,7 @@ dev = [
     "black[jupyter]==24.4.2",
     "isort==5.13.2",
     "taskipy==1.13.0",
+    "pytest",
 ]
 docs = [
     "mkdocs==1.6.1",
@@ -64,3 +65,8 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools_scm]
 version_scheme = "release-branch-semver"
 local_scheme = "no-local-version"
+
+[tool.pytest.ini_options]
+pythonpath = [
+    ".",
+]
