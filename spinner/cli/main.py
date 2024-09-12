@@ -1,31 +1,37 @@
-import importlib.resources
+import importlib
 import os
 
-import click
+from click import File
+from click import argument as arg
+from click import group
+from click import option as opt
 
 import spinner
 
+# ==============================================================================
+# COMMAND-LINE INTERFACE
+# ==============================================================================
 
-@click.command()
-@click.option(
-    "--config",
-    "-c",
-    default="bench_settings.json",
-    type=str,
-    help="Benchmark configuration file",
-)
-@click.option("--run", "-r", default=False, type=bool, help="Run all benchmarks")
-@click.option(
-    "--export", "-e", default=True, type=bool, help="Export results to report.html"
-)
-@click.option("--hosts", "-h", default=None, type=str, help="Hosts list")
-def cli(run, export, config, hosts):
-    if run:
-        spinner.runnner.run(config, hosts)
 
-    if export:
-        path = importlib.resources.files("spinner.exporter") / "reporter.ipynb"
-        spinner.exporter.run(path, "report.html", pkl_db_path=os.getcwd())
+@group()
+def cli() -> None:
+    """Spinner: Reproducible benchmarks."""
+    pass
+
+
+@cli.command()
+@arg("CONFIG", type=File("r"))
+@opt("--hosts", "-h", default=None, type=str, help="Host names")
+def run(config, hosts) -> None:
+    """Run benchmark from configuration file."""
+    spinner.runner.run(config, hosts)
+
+
+@cli.command()
+def export() -> None:
+    """Export benchmark data."""
+    path = importlib.resources.files("spinner.exporter") / "reporter.ipynb"
+    spinner.exporter.run(path, "report.html", pkl_db_path=os.getcwd())
 
 
 def main():
