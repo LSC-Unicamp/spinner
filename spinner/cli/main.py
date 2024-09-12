@@ -2,8 +2,8 @@ import importlib.resources
 import os
 
 import click
-import exporter.exporter as exporter
-from runner.utilities import run_benchmarks
+
+import spinner
 
 
 @click.command()
@@ -20,16 +20,16 @@ from runner.utilities import run_benchmarks
 )
 @click.option("--hosts", "-h", default=None, type=str, help="Hosts list")
 def cli(run, export, config, hosts):
-    main(run, export, config, hosts)
-
-
-def main(run, export, config, hosts):
     if run:
-        run_benchmarks(config, hosts)
+        spinner.runnner.run(config, hosts)
 
     if export:
-        reporter_path = importlib.resources.files("exporter") / "reporter.ipynb"
-        exporter.run_reporter(reporter_path, "report.html", pkl_db_path=os.getcwd())
+        path = importlib.resources.files("spinner.exporter") / "reporter.ipynb"
+        spinner.exporter.run(path, "report.html", pkl_db_path=os.getcwd())
+
+
+def main():
+    cli()
 
 
 if __name__ == "__main__":
