@@ -20,7 +20,7 @@ dependencies = [
     "ipykernel==6.29.4",
     "tokenize-rt==5.2.0",
     "seaborn==0.13.2",
-    "scipy==1.13.1"
+    "scipy==1.13.1",
 ]
 
 [project.optional-dependencies]
@@ -28,7 +28,7 @@ dev = [
     "black==24.4.2",
     "black[jupyter]==24.4.2",
     "isort==5.13.2",
-    "taskipy==1.13.0"
+    "taskipy==1.13.0",
 ]
 docs = [
     "mkdocs==1.6.1",
@@ -36,11 +36,11 @@ docs = [
 ]
 
 [project.scripts]
-spinner = "cli.main:cli"
+spinner = "spinner.cli.main:cli"
 
 [tool.setuptools.packages.find]
-where = ["spinner"]
-include = ["*"]
+where = ["."]
+include = ["spinner*"]
 
 [tool.setuptools]
 include-package-data = true

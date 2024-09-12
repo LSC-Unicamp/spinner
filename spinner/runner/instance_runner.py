@@ -4,7 +4,7 @@ import signal
 import subprocess
 import time
 
-from jinja2 import Environment, Template, Undefined
+from jinja2 import Environment, Undefined
 from rich import print as rprint
 
 
@@ -112,7 +112,7 @@ class InstanceRunner:
                 rprint(f"[red] Unsupported filter type: {filter['type']}")
 
             if "to_float" in filter:
-                rprint(f"-> Converting captured line to float")
+                rprint("-> Converting captured line to float")
                 param_name = filter["to_float"]["name"]
                 param_lambda = filter["to_float"]["lambda"]
 
@@ -166,7 +166,7 @@ class InstanceRunner:
                 # Append run to execution_df
                 curr_df_entry["time"] = elapsed_time
                 if "output" in self.metadata[self.bench_name]:
-                    rprint(f"-> Capturing output")
+                    rprint("-> Capturing output")
                     filtered_output, captured_parameters = self.filter_output(
                         output, error, self.metadata[self.bench_name]["output"]
                     )
@@ -196,10 +196,10 @@ class InstanceRunner:
             rprint(f"-> Retry enabled with limit {retry_limit}")
         elif retry and retry_limit <= 0:
             remaining_tries = float("inf")
-            rprint(f"-> Retry enabled without limit")
+            rprint("-> Retry enabled without limit")
         else:
             remaining_tries = 1
-            rprint(f"-> Retry disabled")
+            rprint("-> Retry disabled")
 
         finished = False
         while remaining_tries > 0 and not finished:
@@ -221,7 +221,7 @@ class InstanceRunner:
                 stdout = stdout.decode()
                 finished = True
 
-            except subprocess.TimeoutExpired as e:
+            except subprocess.TimeoutExpired:
                 rprint(f"-> Command timeout after {timeout} seconds")
                 finished = False
                 returncode = -1  # Timeout error code
