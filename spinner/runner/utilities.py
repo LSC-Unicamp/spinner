@@ -7,7 +7,8 @@ import pandas as pd
 import yaml
 from rich import print as rprint
 from rich.progress import Progress
-from runner.instance_runner import InstanceRunner
+
+from spinner.runner import InstanceRunner
 
 
 def run_benchmarks(config, output, extra_args):

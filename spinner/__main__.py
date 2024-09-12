@@ -1,8 +1,8 @@
-import cli.main
+import spinner
 
 
 def main():
-    cli.main.cli()
+    spinner.cli.main()
 
 
 if __name__ == "__main__":
