@@ -24,10 +24,9 @@ def cli(ctx, verbose) -> None:
 @cli.command()
 @pass_obj
 @arg("CONFIG", type=File("r"))
-@opt("--hosts", "-h", default=None, type=str, help="Host names")
-def run(app, config, hosts) -> None:
+def run(app, config) -> None:
     """Run benchmark from configuration file."""
-    spinner.runner.run(config, hosts)
+    spinner.runner.run(config)
 
 
 @cli.command()
