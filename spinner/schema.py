@@ -21,6 +21,8 @@ from pydantic import (
 )
 from pydantic_core import ErrorDetails
 
+from spinner.app import SpinnerApp
+
 # ==============================================================================
 # GLOBALS
 # ==============================================================================
