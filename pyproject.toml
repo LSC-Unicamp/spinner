@@ -30,6 +30,10 @@ dev = [
     "isort==5.13.2",
     "taskipy==1.13.0"
 ]
+docs = [
+    "mkdocs==1.6.1",
+    "mkdocs-material==9.5.40"
+]
 
 [project.scripts]
 spinner = "cli.main:cli"
