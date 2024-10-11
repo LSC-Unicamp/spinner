@@ -25,9 +25,11 @@ spinner --help
 Usage: spinner [OPTIONS]
 
 Options:
-  -c, --config TEXT     Benchmark configuration file
-  -r, --run BOOLEAN     Run all benchmarks
-  -e, --export BOOLEAN  Export results to report.html
-  -h, --hosts TEXT      Hosts list
-  --help                Show this message and exit.
+  -c, --config TEXT       Benchmark configuration file
+  -r, --run               Run all benchmarks
+  -e, --export            Export results to report.html
+  -o, --output TEXT       Output File (.pkl)
+  -ea, --extra-args TEXT  Extra arguments as key=value pairs, separated by
+                          semicolons.
+  --help                  Show this message and exit.
 ```
