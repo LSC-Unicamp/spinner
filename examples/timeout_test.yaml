@@ -1,0 +1,20 @@
+metadata:
+  description: Timeout test
+  version: "1.0"
+  runs: 1
+  timeout: 5
+  retry: False
+  retry_limit: 0
+
+  sleep_test:
+    command:
+      template: >
+        sleep {{sleep_ammount}} && printf "
+        I slept {{sleep_ammount}}
+        # this may not print due to timeout!
+        "
+
+sleep_test:
+  sleep_ammount:
+    - 1
+    - 200
