@@ -19,7 +19,15 @@ def run_benchmarks(config, output, extra_args):
     bench_metadata["start_timestamp"] = str(pd.Timestamp.now())
     bench_metadata.update(extra_args)
     bench_metadata["runner_hostname"] = str(os.uname()[1])
-    bench_metadata["start_env"] = str(os.environ.copy())
+
+    # Capture specified environment variables
+    if "os_envs" in bench_metadata:
+        env_vars_to_capture = bench_metadata["os_envs"]
+        bench_metadata["start_env"] = {
+            var: os.environ.get(var) for var in env_vars_to_capture
+        }
+    else:
+        bench_metadata["start_env"] = {}
 
     # Iterate over settings in bench_config, excluding metadata
     bench_names = [
@@ -92,7 +100,15 @@ def run_benchmarks(config, output, extra_args):
             progress_callback()
 
     bench_metadata["end_timestamp"] = str(pd.Timestamp.now())
-    bench_metadata["end_env"] = str(os.environ.copy())
+
+    # Capture specified environment variables at the end
+    if "os_envs" in bench_metadata:
+        env_vars_to_capture = bench_metadata["os_envs"]
+        bench_metadata["end_env"] = {
+            var: os.environ.get(var) for var in env_vars_to_capture
+        }
+    else:
+        bench_metadata["end_env"] = {}
 
     rprint(execution_df)
     with open(output, "wb") as f:

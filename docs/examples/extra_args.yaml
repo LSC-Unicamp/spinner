@@ -5,6 +5,7 @@ metadata:
   timeout: 10
   retry: True
   retry_limit: 1
+  os_envs: [PATH, USER]
 
   sleep_test:
     command:
