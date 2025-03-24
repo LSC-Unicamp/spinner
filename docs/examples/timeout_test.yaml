@@ -4,17 +4,15 @@ metadata:
   runs: 1
   timeout: 5
   retry: False
-  retry_limit: 0
+  envvars: ["PATH"]
 
+applications:
   sleep_test:
-    command:
-      template: >
-        sleep {{sleep_ammount}} && printf "
-        I slept {{sleep_ammount}}
-        # this may not print due to timeout!
-        "
+    command: >
+      sleep {{sleep_amount}} && printf "I slept {{sleep_amount}} # this may not print due to timeout!"
 
-sleep_test:
-  sleep_ammount:
-    - 1
-    - 200
+benchmarks:
+  sleep_test:
+    sleep_amount:
+      - 1
+      - 200

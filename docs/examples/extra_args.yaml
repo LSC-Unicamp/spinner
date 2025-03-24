@@ -3,16 +3,16 @@ metadata:
   version: "1.0"
   runs: 1
   timeout: 10
-  retry: True
-  retry_limit: 1
-  os_envs: [PATH, USER]
+  retry: 1
+  envars: [PATH, USER]
 
+applications:
   sleep_test:
     command:
-      template: >
         sleep {{sleep_ammount + (extra_time | int)}}
 
-sleep_test:
-  sleep_ammount:
-    - 1
-    - 2
+benchmarks:
+  sleep_test:
+    sleep_ammount:
+      - 1
+      - 2
