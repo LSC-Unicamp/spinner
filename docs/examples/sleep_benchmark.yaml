@@ -3,17 +3,16 @@ metadata:
   version: "1.0"
   runs: 2
   timeout: 5
-  retry: True
-  retry_limit: 0
+  retry: 1
+  envvars: []
 
+applications:
   sleep_test:
-    command:
-      template: >
-        sleep {{sleep_ammount}} && printf "
-        I slept {{sleep_ammount}}
-        "
+    command: >
+        sleep {{sleep_amount}} && printf "I slept {{sleep_amount}}"
 
-sleep_test:
-  sleep_ammount:
-    - 1
-    - 2
+benchmarks:
+  sleep_test:
+    sleep_amount:
+      - 1
+      - 2
