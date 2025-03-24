@@ -6,9 +6,28 @@ from click import argument as arg
 from click import group
 from click import option as opt
 from click import pass_context, pass_obj
+from pydantic import ValidationError
 
 import spinner
 from spinner.app import SpinnerApp
+from spinner.schema import SpinnerConfig
+
+# ==============================================================================
+# LOCAL FUNCTIONS
+# ==============================================================================
+
+
+def _print_errors(app: SpinnerApp, exception: ValidationError) -> None:
+    n = len(exception.errors())
+    app.print(f"[b red]ERROR[/]: Invalid configuration file ({n} errors)")
+
+    for i, error in enumerate(exception.errors(), start=1):
+        path = ".".join([str(x) for x in error.get("loc")])
+        message = error.get("msg")
+        app.print(f"\n{i:3}. Error in [i]{path!r}[/]\n     [dim]{message}[/]")
+
+    app.print("\nPlease fix the above errors and try again.")
+
 
 # ==============================================================================
 # COMMAND-LINE INTERFACE
@@ -30,7 +49,13 @@ def cli(ctx, verbose) -> None:
 @arg("CONFIG", type=File("r"))
 def run(app, config) -> None:
     """Run benchmark from configuration file."""
-    spinner.runner.run(config)
+    try:
+        config = SpinnerConfig.from_stream(config)
+    except ValidationError as errors:
+        _print_errors(app, errors)
+        raise SystemExit(1)
+
+    spinner.runner.run(app, config)
 
 
 @cli.command()
