@@ -12,6 +12,8 @@ import spinner
 from spinner.app import SpinnerApp
 from spinner.schema import SpinnerConfig
 
+from .util import ExtraArgs
+
 # ==============================================================================
 # LOCAL FUNCTIONS
 # ==============================================================================
@@ -47,7 +49,8 @@ def cli(ctx, verbose) -> None:
 @cli.command()
 @pass_obj
 @arg("CONFIG", type=File("r"))
-def run(app, config) -> None:
+@opt("--extra-args", "-e", type=ExtraArgs())
+def run(app, config, extra_args) -> None:
     """Run benchmark from configuration file."""
     try:
         config = SpinnerConfig.from_stream(config)
@@ -55,7 +58,10 @@ def run(app, config) -> None:
         _print_errors(app, errors)
         raise SystemExit(1)
 
-    spinner.runner.run(app, config)
+    if not extra_args:
+        extra_args = {}
+
+    spinner.runner.run(app, config, **extra_args)
 
 
 @cli.command()

@@ -14,7 +14,7 @@ from spinner.schema import SpinnerConfig
 # ==============================================================================
 
 
-def run_benchmarks(app: SpinnerApp, config: SpinnerConfig):
+def run_benchmarks(app: SpinnerApp, config: SpinnerConfig, **extra):
     """
     Generate execution matrix from input configuration and run all benchmarks.
     """
@@ -41,6 +41,7 @@ def run_benchmarks(app: SpinnerApp, config: SpinnerConfig):
                 benchmark=bench,
                 dataframe=df,
                 progress=progress,
+                extra_args=extra,
             )
             runner.run()
 
@@ -52,6 +53,7 @@ def run_benchmarks(app: SpinnerApp, config: SpinnerConfig):
         "start_env": start_env,
         "end_ts": pd.Timestamp.now(),
         "end_env": os.environ.copy(),
+        **extra,
     }
 
     with Path("bench_metadata.pkl").open(mode="wb") as f:
