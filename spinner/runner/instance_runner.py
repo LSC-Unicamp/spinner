@@ -31,6 +31,7 @@ class InstanceRunner:
     benchmark: SpinnerBenchmark
     dataframe: pd.DataFrame
     application: SpinnerApplication
+    extra_args: dict[str, str] | None
 
     def __init__(
         self,
@@ -41,6 +42,7 @@ class InstanceRunner:
         benchmark: SpinnerBenchmark,
         dataframe: pd.DataFrame,
         progress: RunnerProgress,
+        extra_args: dict[str, str] | None = None,
     ) -> None:
         self.app = app
         self.config = config
@@ -50,10 +52,11 @@ class InstanceRunner:
         self.progress = progress
         self.application = config.applications[name]
         self.environment = Environment(undefined=StrictUndefined)
+        self.extra_args = extra_args
 
     def run(self) -> None:
         """Sweep the benchmark parameters and execute each combination."""
-        for parameters in self.benchmark.sweep_parameters():
+        for parameters in self.benchmark.sweep_parameters(self.extra_args):
             self.run_with_parameters(parameters)
 
     def run_with_parameters(self, parameters: dict[str, Any]) -> None:

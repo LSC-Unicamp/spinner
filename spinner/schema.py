@@ -234,14 +234,28 @@ class SpinnerBenchmark(RootModel):
     def parameters(self) -> set[str]:
         return set(self.root.keys())
 
+    @property
+    def keys(self) -> list[str]:
+        return list(self.root.keys())
+
+    @property
+    def values(self) -> list[str]:
+        return list(self.root.values())
+
     @cached_property
     def num_jobs(self) -> int:
         return math.prod(len(x) for x in self.root.values())
 
-    def sweep_parameters(self) -> list[dict[str, Any]]:
-        keys = self.root.keys()
-        values = it.product(*[values for values in self.root.values()])
-        return list(dict(zip(keys, x)) for x in values)
+    def sweep_parameters(
+        self, extra: dict[str, str] | None = None
+    ) -> list[dict[str, Any]]:
+        keys = self.keys
+        values = self.values
+        if extra is not None:
+            keys.extend(extra.keys())
+            values.extend(extra.values())
+
+        return list(dict(zip(keys, x)) for x in it.product(*values))
 
 
 class SpinnerBenchmarks(RootModel):
@@ -313,12 +327,9 @@ class SpinnerConfig(BaseModel):
 
             # Which placeholders that are *not* in the benchmark parameters
             if difference := placeholders - self.benchmarks[name].parameters:
-                errors.append(
-                    (
-                        ("applications", name, "command"),
-                        f"placeholders {difference} are undefined",
-                    )
-                )
+                app = SpinnerApp.get()
+                for var in difference:
+                    app.info(f"Variable {var!r} not in benchmark parameters.")
 
         return errors
 
