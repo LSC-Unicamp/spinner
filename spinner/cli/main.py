@@ -49,8 +49,9 @@ def cli(ctx, verbose) -> None:
 @cli.command()
 @pass_obj
 @arg("CONFIG", type=File("r"))
+@opt("--output", "-o", default="benchdata.pkl", type=File("wb"))
 @opt("--extra-args", "-e", type=ExtraArgs())
-def run(app, config, extra_args) -> None:
+def run(app, config, output, extra_args) -> None:
     """Run benchmark from configuration file."""
     try:
         config = SpinnerConfig.from_stream(config)
@@ -61,7 +62,7 @@ def run(app, config, extra_args) -> None:
     if not extra_args:
         extra_args = {}
 
-    spinner.runner.run(app, config, **extra_args)
+    spinner.runner.run(app, config, output, **extra_args)
 
 
 @cli.command()

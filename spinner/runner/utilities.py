@@ -1,6 +1,6 @@
 import os
 import pickle
-from pathlib import Path
+from typing import BinaryIO
 
 import pandas as pd
 
@@ -14,7 +14,7 @@ from spinner.schema import SpinnerConfig
 # ==============================================================================
 
 
-def run_benchmarks(app: SpinnerApp, config: SpinnerConfig, **extra):
+def run_benchmarks(app: SpinnerApp, config: SpinnerConfig, output: BinaryIO, **extra):
     """
     Generate execution matrix from input configuration and run all benchmarks.
     """
@@ -56,5 +56,4 @@ def run_benchmarks(app: SpinnerApp, config: SpinnerConfig, **extra):
         **extra,
     }
 
-    with Path("bench_metadata.pkl").open(mode="wb") as f:
-        pickle.dump({"config": config, "metadata": metadata, "dataframe": df}, f)
+    pickle.dump({"config": config, "metadata": metadata, "dataframe": df}, output)
