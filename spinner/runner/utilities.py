@@ -29,7 +29,7 @@ def run_benchmarks(app: SpinnerApp, config: SpinnerConfig, **extra):
 
     # Save initial timestamp and environment variables.
     start_ts = pd.Timestamp.now()
-    start_env = os.environ.copy()
+    start_env = config.metadata.capture_environment()
 
     # Loop through all benchmarks, executing one by one.
     with RunnerProgress(app, config) as progress:
@@ -52,7 +52,7 @@ def run_benchmarks(app: SpinnerApp, config: SpinnerConfig, **extra):
         "start_ts": start_ts,
         "start_env": start_env,
         "end_ts": pd.Timestamp.now(),
-        "end_env": os.environ.copy(),
+        "end_env": config.metadata.capture_environment(),
         **extra,
     }
 

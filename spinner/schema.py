@@ -49,12 +49,26 @@ class SpinnerMetadata(BaseModel):
     runs: int = Field(gt=0)
     timeout: PositiveFloat | None = Field(default=None, gt=0.0)
     retry: int = Field(default=0, ge=0)
+    envvars: list[str] | str = Field(default_factory=list)
 
     @field_validator("retry", mode="before")
     def validate_retry(cls, retry: int | bool) -> int:
         if isinstance(retry, bool):
             return 1 if retry else 0
         return retry
+
+    @field_validator("envvars", mode="after")
+    def validate_envvars(cls, envvars: list[str] | str) -> list[str] | str:
+        if isinstance(envvars, str) and envvars != "*":
+            raise ValueError(
+                "Expected list with var names or '*' for capturing everything"
+            )
+        return envvars
+
+    def capture_environment(self) -> dict[str, str]:
+        if isinstance(self.envvars, str) and self.envvars == "*":
+            return dict(os.environ)
+        return {var: os.environ.get(var) for var in self.envvars}
 
 
 class SpinnerCommand(RootModel):
