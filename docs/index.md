@@ -1,66 +1,53 @@
 ![spinner logo](assets/spinner.png){width="300"}
+
 # Spinner
 
-**Spinner** is an open-source, parameterized sweep benchmark tool designed for High-Performance Computing (HPC). It facilitates the efficient execution of user-supplied applications, data collection, and version control, all while using a simple YAML file format to manage configurations. Spinner is ideal for conducting repeatable, shareable, and insightful experiments across various HPC environments.
+**Spinner** is an open-source, parameterized sweep benchmark tool for High-Performance Computing (HPC). It runs user-supplied commands with varying parameters, collecting output and recording metadata in a straightforward, YAML-based configuration.
 
-## Features
+## Key Features
 
-- **Parameterized Sweeps**: Dynamically replace parameters in command templates, enabling easy execution of parameter sweeps.
-- **YAML Configuration**: Simplifies the setup and sharing of experimental configurations. Versioning and metadata management are built-in for reproducibility and collaboration.
-- **Non-Intrusive Design**: Spinner executes user-defined commands without modifying your applications.
-- **Automatic Re-run**: Automatically rerun failed experiments, making it ideal for unstable applications or testing a range of parameter combinations.
-- **Data Collection**: Captures detailed output from each experiment, storing raw data and experiment metadata in dataframes. This provides a clear picture of experiment outcomes beyond summary statistics.
-- **HPC Proven**: Successfully tested with major HPC applications such as LAMMPS, GROMACS, Task Bench, XSBench, and RSBench on multiple clusters.
+- **Parameterized Sweeps**: Define arbitrary parameter sweeps in YAML.
+- **Non-Intrusive**: Runs your existing scripts or applications unchanged.
+- **Re-run and Timeout Handling**: Automatically retry failed runs and enforce timeouts.
+- **Automatic Data Collection**: Captures logs, metrics, and metadata into concise dataframes.
+- **YAML Configuration**: Reproducible, shareable configs for HPC workloads.
 
-## Getting Started
+## Quick Start
 
-### Installation
+1. **Install Spinner**:
 
-You can install Spinner via pip:
+   ```bash
+   pip install spinner
+   ```
 
-```bash
-pip install spinner
+2. **Create a YAML file** defining parameters and commands. For a minimal example:
+
+   ```yaml
+   --8<-- "./docs/examples/sleep_benchmark.yaml"
+   ```
+
+3. **Run Spinner**:
+
+   ```bash
+   spinner -c sleep_benchmark.yaml -r -o results.pkl
+   ```
+
+   This runs all parameter combinations, retries failures (if configured), and stores the results in `results.pkl`.
+
+## Documentation & Examples
+
+- **Examples**: See [Examples](examples.md) for a gallery of ready-to-run YAML files showcasing parameter sweeps, capturing output from commands, handling timeouts, and more.
+- **SLURM HPC**: Refer to [Using with SLURM](slurm.md) for tips on incorporating Spinner in batch jobs.
+- **Contributing**: Check out [Contribute to Spinner](contribute.md) for development guidelines, linting policy, and release automation steps.
+
+## Citation
+
+If you use Spinner in your research, please cite it.
+
+```bibtex
+--8<-- "./docs/assets/citation.bib"
 ```
 
-### Quick Start
+## License
 
-1. **Create a YAML file** that defines your experiments and parameters. Example:
-
-    ```yaml
-    metadata:
-        description: Timeout test
-        version: "1.0"
-        runs: 1
-        timeout: 5
-        retry: False
-        retry_limit: 0
-
-        sleep_test:
-            command:
-                template: >
-                    sleep {{sleep_ammount}} && printf "
-                    I slept {{sleep_ammount}}
-                    # this may not print due to timeout!
-                    "
-
-    sleep_test:
-        sleep_ammount:
-            - 1
-            - 200
-    ```
-
-2. **Run Spinner** with your configuration:
-
-    ```bash
-    spinner -c timeout_test.yaml -r -o timeout_test.pkl
-    ```
-
-3. **Collect Results**: Spinner will log the results, including runtime metrics and application output, in dataframes for easy analysis.
-
-## Documentation
-
-For full documentation, including advanced usage and configuration options, please visit the [official documentation](#).
-
-## Contributing
-
-We welcome contributions! Please check the [contribution guidelines](contribute.md) for more information.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
