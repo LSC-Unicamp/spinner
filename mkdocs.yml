@@ -26,6 +26,9 @@ theme:
       primary: indigo
       accent: indigo
 
+plugins:
+  - include-markdown
+
 markdown_extensions:
   - attr_list
   - pymdownx.emoji:

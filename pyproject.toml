@@ -33,7 +33,8 @@ dev = [
 ]
 docs = [
     "mkdocs==1.6.1",
-    "mkdocs-material==9.5.40"
+    "mkdocs-material==9.5.40",
+    "mkdocs-include-markdown-plugin==7.1.5",
 ]
 
 [project.scripts]
