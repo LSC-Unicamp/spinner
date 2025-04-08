@@ -1,8 +1,10 @@
 # Using with SLURM
 
-Spinner is designed to work well with Slurm, but for simplicity it does not directly launch or interact with jobs.
+Spinner integrates nicely into SLURM job scripts. Rather than calling `srun` or `mpirun` directly inside Spinner, you typically let SLURM handle resource allocation, then pass any node/host info as `--extra-args`.
 
-```sh
+Example SLURM submission script:
+
+```bash
 #!/bin/bash
 #SBATCH --nodes=4
 #SBATCH --partition=gpu-partition
@@ -12,18 +14,22 @@ Spinner is designed to work well with Slurm, but for simplicity it does not dire
 
 set -e
 
-# Load required modules
 module purge
 module load cmake/3.27.9
 module load mpich/4.0.2
 module load singularity/3.7.1
 
-# Load Spinner env
+# Activate Spinner environment
 source spinner/.venv/bin/activate
 
-# Get MPI host lsit from Slurm and format it for MPI
-host_list=$(scontrol show hostname $(echo "$SLURM_JOB_NODELIST" | head -n 4 | tr '\n' ',' | sed 's/,$//'))
+# Capture the allocated nodes for the MPI run
+host_list=$(scontrol show hostname $SLURM_JOB_NODELIST | paste -sd "," -)
 
-spinner -c bench_settings.yaml -r -e -o mpi_bench.pkl --extra-args "hosts=$host_list"
-
+spinner run bench_settings.yaml \
+    --extra-args "hosts=$host_list"
 ```
+
+Here:
+
+- SLURM decides which nodes to use.
+- We pass the node list (`hosts`) as an extra argument to Spinner’s YAML config.
