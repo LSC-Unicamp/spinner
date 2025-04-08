@@ -1,4 +1,4 @@
-# Using with SLURM
+# SLURM usage example
 
 Spinner integrates nicely into SLURM job scripts. Rather than calling `srun` or `mpirun` directly inside Spinner, you typically let SLURM handle resource allocation, then pass any node/host info as `--extra-args`.
 

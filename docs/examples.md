@@ -1,4 +1,4 @@
-# Spinner Examples
+# Examples
 
 Below are various examples demonstrating Spinner’s capabilities. Each example includes a YAML snippet (embedded with the [mkdocs-include plugin](https://github.com/mondeja/mkdocs-include-markdown-plugin)) so you can run them directly or adapt them to your needs.
 

@@ -1,4 +1,4 @@
-# Contribute to Spinner
+# Contribute
 
 Welcome to the Spinner project! This guide will help you set up your development environment, understand our linting policies, learn how to use Git tags for versioning, and understand how our build automation works.
 
@@ -120,11 +120,9 @@ This script will:
 
 ## Versioning with Git Tags
 
-We use Git tags to manage our release versions, which are crucial for packaging and distributing the Spinner project via PyPI.
+We use Git tags to manage our release versions, which are crucial for packaging and distributing the Spinner project via PyPI. **Important:** We rely on `setuptools_scm` to parse tags as valid [PEP 440](https://peps.python.org/pep-0440/) versions. That means tags like `v1.2.3` or `v1.2.3.dev1` are valid, but adding arbitrary suffixes (e.g., `v1.2.3-test`) will cause a build failure.
 
 ### Using Git Tags
-
-To create a new Git tag for a release, follow these steps:
 
 1. **Ensure all changes are committed**:
 
@@ -139,22 +137,35 @@ To create a new Git tag for a release, follow these steps:
    git tag v0.0.2
    ```
 
-   Replace `v0.0.2` with the appropriate version number.
-
+   Replace `v0.0.2` with the appropriate version number (e.g., `v1.0.0` or `v1.2.3.dev1` for a development/pre-release).
 3. **Push the tag to GitHub**:
 
    ```sh
    git push origin v0.0.2
    ```
 
+### Deleting a Test Tag
+
+If you pushed a **test-only** tag and want to remove it:
+
+```sh
+# Remove from remote
+git push origin :refs/tags/v0.0.2
+
+# Remove from local
+git tag -d v0.0.2
+```
+
 ### Best Practices for Tagging
 
-- **Semantic Versioning**: We follow [Semantic Versioning](https://semver.org/) with the format `vMAJOR.MINOR.PATCH` (e.g., `v1.2.3`).
-  - **MAJOR** version when you make incompatible API changes.
-  - **MINOR** version when you add functionality in a backwards-compatible manner.
+- **Semantic Versioning**: We follow [Semantic Versioning](https://semver.org/) with the format `vMAJOR.MINOR.PATCH` (e.g., `v1.2.3`).  
+  - **MAJOR** version when you make incompatible API changes.  
+  - **MINOR** version when you add functionality in a backwards-compatible manner.  
   - **PATCH** version when you make backwards-compatible bug fixes.
 
-- **Annotated Tags**: Use annotated tags to include additional metadata such as the tagger name, email, date, and a message.
+- **Pre-releases**: If you want to test a release or offer a release candidate, append `.devX` or `rcX` (e.g., `v1.2.3.dev1` or `v1.2.3rc1`). This is valid for `setuptools_scm` and won’t break the build.
+
+- **Annotated Tags**: Use annotated tags to include additional metadata such as the tagger name, email, date, and a message:
 
   ```sh
   git tag -a v0.0.2 -m "Release version 0.0.2"
@@ -168,17 +179,15 @@ To create a new Git tag for a release, follow these steps:
 
 ## Build Automation with GitHub Actions
 
-Our project uses GitHub Actions to automate the build and deployment process. When a new tag is pushed to the repository, the build bot (GitHub Actions workflow) is triggered to:
+Our project uses GitHub Actions to automate the build and deployment process. When a new tag is pushed to the repository (matching `v*.*.*`), the build bot is triggered to:
 
 - **Build the Package**: Create source and wheel distributions of the package.
 - **Publish to PyPI**: Upload the distributions to PyPI using Twine.
 
 ### How the Build Bot Works
 
-1. **Trigger**: The workflow is triggered on pushing tags that match the pattern `v*.*.*` (e.g., `v0.0.2`).
-
-2. **Workflow File**: The workflow is defined in `.github/workflows/publish.yml`.
-
+1. **Trigger**: The workflow is triggered on pushing tags that match the pattern `v*.*.*`.
+2. **Workflow File**: The workflow is defined in `.github/workflows/publish.yml` or a similarly named CI file.
 3. **Steps**:
    - **Checkout Code**: Fetches the repository code and tags.
    - **Set Up Python**: Configures the Python environment.
@@ -193,6 +202,7 @@ Our project uses GitHub Actions to automate the build and deployment process. Wh
 
 ### Important Notes
 
+- **Use Valid PEP 440 Tags**: The build will fail if the tag isn’t a valid version (e.g., `v1.2.3.dev1` instead of `v1.2.3-some-test`).
 - **Ensure Tags are Pushed**: The build bot relies on the Git tags to determine the version. Always push your tags to GitHub.
 - **Check Workflow Status**: After pushing a tag, monitor the Actions tab in GitHub to ensure the workflow runs successfully.
 - **Test Locally**: Before pushing a tag, you can test the build process locally:
