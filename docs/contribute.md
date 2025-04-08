@@ -13,6 +13,8 @@ python3 -m virtualenv .venv
 source .venv/bin/activate
 python3 -m pip install pip --upgrade
 python -m pip install -e ".[dev]"
+# If you also want to build the documentation locally, run:
+python -m pip install -e ".[docs]"
 ```
 
 This will:
@@ -198,6 +200,7 @@ Our project uses GitHub Actions to automate the build and deployment process. Wh
   ```sh
   python -m build
   ```
+
 ---
 
 Happy coding!

@@ -1,6 +1,6 @@
-![spinner logo](assets/spinner.png){width="300"}
-
 # Spinner
+
+![spinner logo](assets/spinner.png){width="300"}
 
 **Spinner** is an open-source, parameterized sweep benchmark tool for High-Performance Computing (HPC). It runs user-supplied commands with varying parameters, collecting output and recording metadata in a straightforward, YAML-based configuration.
 
@@ -13,6 +13,16 @@
 - **YAML Configuration**: Reproducible, shareable configs for HPC workloads.
 
 ## Quick Start
+
+If you prefer to use an isolated environment, you can create a virtual environment using `venv` or `conda` before installing.
+
+```bash
+python3 -m ensurepip
+python3 -m pip install virtualenv
+python3 -m virtualenv .venv
+source .venv/bin/activate
+python3 -m pip install pip --upgrade
+```
 
 1. **Install Spinner**:
 
@@ -29,7 +39,7 @@
 3. **Run Spinner**:
 
    ```bash
-   spinner -c sleep_benchmark.yaml -r -o results.pkl
+   spinner run sleep_benchmark.yaml
    ```
 
    This runs all parameter combinations, retries failures (if configured), and stores the results in `results.pkl`.
@@ -50,4 +60,4 @@ If you use Spinner in your research, please cite it.
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License. See the LICENSE.md in the repository root for details.

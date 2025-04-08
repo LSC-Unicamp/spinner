@@ -2,34 +2,24 @@
 
 <img src="spinner.png" alt="drawing" width="200"/>
 
-## Contributting
-Read the [Contribution Guidelines](docs/contribute.md).
+## Overview
 
-## Setting up environment
+**Spinner** is an open-source, parameterized sweep benchmark tool for High-Performance Computing (HPC). It executes user-defined applications across multiple parameter combinations, automatically collects output, and maintains version-controlled experiment configurations. Thanks to its simple YAML format, Spinner helps you run repeatable and shareable experiments in various HPC environments.
 
-```sh
-python3 -m ensurepip
-python3 -m pip3 install virtualenv
-python3 -m virtualenv .venv
-source .venv/bin/activate
-python3 -m pip install pip --upgrade
-python -m pip install .
+## Usage
+
+For **examples**, **installation instructions**, and a quick start guide, visit the [Spinner Documentation](https://lsc-unicamp.github.io/spinner/).
+
+Spinner is distributed as a Python package and can be installed via `pip`:
+
+```bash
+pip install spinner
 ```
 
-## Running
+## Contributing
 
-Check examples in the docs folder. Check plotting examples in the notebook `spinner/exporter/reporter.ipynb`. This is the notebook that the command `--export` uses.
+To learn how to set up your development environment and contribute to Spinner, please refer to the [Contribution Guidelines](docs/contribute.md).
 
-```sh
-spinner --help
-Usage: spinner [OPTIONS]
+## Citation
 
-Options:
-  -c, --config TEXT       Benchmark configuration file
-  -r, --run               Run all benchmarks
-  -e, --export            Export results to report.html
-  -o, --output TEXT       Output File (.pkl)
-  -ea, --extra-args TEXT  Extra arguments as key=value pairs, separated by
-                          semicolons.
-  --help                  Show this message and exit.
-```
+If you use Spinner in your research, kindly cite it. Citation details are provided in the [documentation](https://lsc-unicamp.github.io/spinner#citation).
