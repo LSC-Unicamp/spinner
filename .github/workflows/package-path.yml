@@ -1,4 +1,4 @@
-name: Spinner test
+name: Spinner package path test 
 
 on:
   push:
@@ -24,28 +24,18 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        python -m pip install ".[dev]"
-    - name: Basic benchmark test
-      run: |
-         spinner run docs/examples/sleep_benchmark.yaml
+        python -m pip install "."
+        mkdir other-folder
     - name: Sleep and plot
       run: |
-         spinner run docs/examples/sleep_plot.yaml -o output.pkl
-         spinner export -i output.pkl
-    - name: Timeout test
-      run: |
-         spinner run docs/examples/timeout_test.yaml
-    - name: Extra Args test
-      run: |
-         spinner run docs/examples/extra_args.yaml --extra-args "extra_time=4"
-    - name: Capture output test
-      run: |
-         spinner run docs/examples/capture_output.yaml
+         cd other-folder
+         spinner run ../docs/examples/sleep_plot.yaml
+         spinner export
     - name: upload produced graphs
       uses: actions/upload-artifact@v4
       with:
         name: generated graphs
         path: |
-          benchdata.html
-          benchdata.ipynb
-          output-benchdata/
+          other-folder/benchdata.html
+          other-folder/benchdata.ipynb
+          other-folder/output-benchdata/
