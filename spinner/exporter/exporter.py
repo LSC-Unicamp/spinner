@@ -1,7 +1,8 @@
+import os
+
 import nbformat
 from nbconvert import HTMLExporter
 from nbconvert.preprocessors import ExecutePreprocessor
-import os
 
 
 def run_reporter(notebook_path, output_path, pkl_db_path=None):

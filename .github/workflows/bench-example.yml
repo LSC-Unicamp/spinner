@@ -28,6 +28,10 @@ jobs:
     - name: Basic benchmark test
       run: |
          spinner run docs/examples/sleep_benchmark.yaml
+    - name: Sleep and plot
+      run: |
+         spinner run docs/examples/sleep_plot.yaml -o output.pkl
+         spinner export -i output.pkl
     - name: Timeout test
       run: |
          spinner run docs/examples/timeout_test.yaml
