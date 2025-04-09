@@ -1,0 +1,18 @@
+metadata:
+  description: Sleep check
+  version: "1.0"
+  runs: 2
+  timeout: 5
+  retry: 1
+  envvars: []
+
+applications:
+  sleep_test:
+    command: >
+        sleep {{sleep_amount}} && printf "I slept {{sleep_amount}}"
+
+benchmarks:
+  sleep_test:
+    sleep_amount:
+      - 1
+      - 2
