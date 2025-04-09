@@ -1,6 +1,7 @@
 import nbformat
 from nbconvert import HTMLExporter
 from nbconvert.preprocessors import ExecutePreprocessor
+import os
 
 
 def run_reporter(notebook_path, output_path, pkl_db_path=None):
@@ -8,21 +9,21 @@ def run_reporter(notebook_path, output_path, pkl_db_path=None):
         nb = nbformat.read(f, as_version=4)
 
     # Modify the parameters in the first code cell
-    if pkl_db_path is not None:
-        param_cell_index = 0  # First cell hold parameters
-        nb.cells[
-            param_cell_index
-        ].source = f"""
-        # Default locations if parameter not passed
-        benchmark_data_path = "{pkl_db_path}/bench_metadata.pkl"
-        output_folder = "{pkl_db_path}/output"
-        """
+    pkl_db_folder = os.path.dirname(pkl_db_path)
+    param_cell_index = 0  # First cell hold parameters
+    nb.cells[
+        param_cell_index
+    ].source = f"""
+    # Default locations if parameter not passed
+    benchmark_data_path = "{pkl_db_path}"
+    output_folder = "{pkl_db_folder}/output"
+    """
 
     # Set up the notebook execution configuration
     execute_preprocessor = ExecutePreprocessor(timeout=600, kernel_name="python3")
 
     # Execute the notebook
-    execute_preprocessor.preprocess(nb, {"metadata": {"path": "./spinner"}})
+    execute_preprocessor.preprocess(nb, {"metadata": {"path": pkl_db_folder}})
 
     # Set up the HTML exporter
     html_exporter = HTMLExporter()
