@@ -1,5 +1,5 @@
-import os
 import textwrap
+from pathlib import Path
 
 import nbformat
 from nbconvert import HTMLExporter
@@ -8,12 +8,14 @@ from nbconvert.preprocessors import ExecutePreprocessor
 
 def run_reporter(notebook_path, pkl_db_path=None):
     # Resolve folder and base name (remove .pkl extension)
-    pkl_db_folder = os.path.dirname(pkl_db_path)
-    base_name = os.path.splitext(os.path.basename(pkl_db_path))[0]
+    # Resolve folder and base name (remove .pkl extension)
+    pkl_db_path = Path(pkl_db_path)
+    pkl_db_folder = pkl_db_path.parent
+    base_name = pkl_db_path.stem  # Remove the extension
 
     # Paths for the new .ipynb and .html
-    new_notebook_path = os.path.join(pkl_db_folder, f"{base_name}.ipynb")
-    new_html_path = os.path.join(pkl_db_folder, f"{base_name}.html")
+    new_notebook_path = pkl_db_folder / f"{base_name}.ipynb"
+    new_html_path = pkl_db_folder / f"{base_name}.html"
 
     # Read the input notebook
     with open(notebook_path, encoding="utf-8") as f:
