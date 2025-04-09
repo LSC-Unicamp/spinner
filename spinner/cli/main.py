@@ -67,10 +67,11 @@ def run(app, config, output, extra_args) -> None:
 
 @cli.command()
 @pass_obj
-def export(app) -> None:
+@opt("--input", "-i", default="benchdata.pkl", type=File("rb"))
+def export(app, input) -> None:
     """Export benchmark data."""
     path = importlib.resources.files("spinner.exporter") / "reporter.ipynb"
-    spinner.exporter.run(path, "report.html", pkl_db_path=os.getcwd())
+    spinner.exporter.run(path, "report.html", pkl_db_path=os.path.abspath(input.name))
 
 
 def main():
