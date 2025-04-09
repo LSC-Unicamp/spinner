@@ -25,7 +25,7 @@ def run_reporter(notebook_path, pkl_db_path=None):
         f"""
     # Default locations if parameter not passed
     benchmark_data_path = "{pkl_db_path}"
-    output_folder = "{pkl_db_folder}/output"
+    output_folder = "{pkl_db_folder}/output-{base_name}"
     """
     )
 
