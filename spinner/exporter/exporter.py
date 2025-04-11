@@ -5,6 +5,9 @@ import nbformat
 from nbconvert import HTMLExporter
 from nbconvert.preprocessors import ExecutePreprocessor
 
+import spinner
+from spinner.app import SpinnerApp
+
 
 def run_reporter(notebook_path, pkl_db_path=None):
     # Resolve folder and base name (remove .pkl extension)
@@ -32,12 +35,15 @@ def run_reporter(notebook_path, pkl_db_path=None):
     )
 
     # Set up the notebook execution configuration
-    execute_preprocessor = ExecutePreprocessor(timeout=600, kernel_name="python3")
-    execute_preprocessor.preprocess(nb, {"metadata": {"path": pkl_db_folder}})
-
-    # Write the executed notebook to disk in the user folder
-    with open(new_notebook_path, "w", encoding="utf-8") as f:
-        nbformat.write(nb, f)
+    try:
+        execute_preprocessor = ExecutePreprocessor(timeout=600, kernel_name="python3")
+        execute_preprocessor.preprocess(nb, {"metadata": {"path": pkl_db_folder}})
+    except Exception as e:
+        SpinnerApp.print(f"[b red]ERROR[/]: Error executing the notebook: {e}")
+    finally:
+        # Write the executed notebook to disk in the user folder
+        with open(new_notebook_path, "w", encoding="utf-8") as f:
+            nbformat.write(nb, f)
 
     # Export the executed notebook to HTML
     html_exporter = HTMLExporter()

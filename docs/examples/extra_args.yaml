@@ -4,7 +4,7 @@ metadata:
   runs: 1
   timeout: 10
   retry: 1
-  envars: [PATH, USER]
+  envvars: [PATH, USER]
 
 applications:
   sleep_test:
