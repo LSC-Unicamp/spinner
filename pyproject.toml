@@ -57,6 +57,7 @@ line_length = 79
 [tool.taskipy.tasks]
 lint = "black --check --diff . && isort --check --diff ."
 format = "black . && isort ."
+test = "task lint && pytest"
 
 [build-system]
 requires = ["setuptools>=42", "wheel", "setuptools_scm"]
