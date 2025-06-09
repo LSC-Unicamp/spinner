@@ -33,10 +33,7 @@ jobs:
       - name: Extra Args test
         run: |
           spinner run docs/examples/extra_args.yaml --extra-args "extra_time=4"
-      - name: Extra Args comma test (original hosts)
-        run: |
-          spinner run docs/examples/extra_args_list.yaml --extra-args "hosts=sorgan-cpu1,sorgan-cpu2"
-      - name: Extra Args comma test (generic hosts)
+      - name: Extra Args comma test
         run: |
           spinner run docs/examples/extra_args_list.yaml --extra-args "hosts=machineA,machineB"
       - name: Extra Args list test
