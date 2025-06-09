@@ -163,7 +163,7 @@ git tag -d v0.0.2
   - **MINOR** version when you add functionality in a backwards-compatible manner.  
   - **PATCH** version when you make backwards-compatible bug fixes.
 
-- **Pre-releases**: If you want to test a release or offer a release candidate, append `.devX` or `rcX` (e.g., `v1.2.3.dev1` or `v1.2.3rc1`). This is valid for `setuptools_scm` and won’t break the build.
+- **Pre-releases**: If you want to test a release or offer a release candidate, append `.devX`, `bX`, or `rcX` (e.g., `v1.2.3.dev1`, `v1.2.0b1`, or `v1.2.3rc1`). This is valid for `setuptools_scm` and won’t break the build.
 
 - **Annotated Tags**: Use annotated tags to include additional metadata such as the tagger name, email, date, and a message:
 

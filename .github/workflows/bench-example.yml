@@ -8,7 +8,6 @@ on:
 
 jobs:
   test:
-
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -16,36 +15,55 @@ jobs:
         python-version: ["3.11"]
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        python -m pip install ".[dev]"
-    - name: Basic benchmark test
-      run: |
-         spinner run docs/examples/sleep_benchmark.yaml
-    - name: Sleep and plot
-      run: |
-         spinner run docs/examples/sleep_plot.yaml -o output.pkl
-         spinner export -i output.pkl
-    - name: Timeout test
-      run: |
-         spinner run docs/examples/timeout_test.yaml
-    - name: Extra Args test
-      run: |
-         spinner run docs/examples/extra_args.yaml --extra-args "extra_time=4"
-    - name: Capture output test
-      run: |
-         spinner run docs/examples/capture_output.yaml
-    - name: upload produced graphs
-      uses: actions/upload-artifact@v4
-      with:
-        name: generated graphs
-        path: |
-          benchdata.html
-          benchdata.ipynb
-          output-benchdata/
+      - uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install ".[dev]"
+      - name: Basic benchmark test
+        run: |
+          spinner run docs/examples/sleep_benchmark.yaml
+      - name: Timeout test
+        run: |
+          spinner run docs/examples/timeout_test.yaml
+      - name: Extra Args test
+        run: |
+          spinner run docs/examples/extra_args.yaml --extra-args "extra_time=4"
+      - name: Capture output test
+        run: |
+          spinner run docs/examples/capture_output.yaml
+
+  exporter:
+    runs-on: ubuntu-latest
+    needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11"]
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install ".[dev,exporter]"
+      - name: Sleep and plot
+        run: |
+          spinner run docs/examples/sleep_plot.yaml -o output.pkl
+          spinner export -i output.pkl
+      - name: upload produced graphs
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated graphs
+          path: |
+            benchdata.html
+            benchdata.ipynb
+            output-benchdata/

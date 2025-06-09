@@ -10,16 +10,12 @@ dynamic = ["version"]
 requires-python = ">=3.9.12, <4"
 dependencies = [
     "click~=8.1",
-    "ipykernel~=6.29",
     "jinja2~=3.1",
-    "jupyter~=1.1",
-    "matplotlib~=3.10",
+    "pyyaml~=6.0",
     "numpy~=2.2",
     "pandas~=2.2",
     "pydantic~=2.10",
     "rich~=13.9",
-    "scipy~=1.15",
-    "seaborn~=0.13",
     "tokenize-rt~=6.1",
 ]
 
@@ -35,6 +31,14 @@ docs = [
     "mkdocs==1.6.1",
     "mkdocs-material==9.5.40",
     "mkdocs-include-markdown-plugin==7.1.5",
+]
+exporter = [
+    "ipykernel~=6.29",
+    "nbconvert~=7.16",
+    "nbformat~=5.10",
+    "matplotlib~=3.10",
+    "scipy~=1.15",
+    "seaborn~=0.13",
 ]
 
 [project.scripts]

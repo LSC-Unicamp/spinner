@@ -16,6 +16,12 @@ Spinner is distributed as a Python package and can be installed via `pip`:
 pip install spinner
 ```
 
+To enable the optional export features that rely on Jupyter, install with:
+
+```bash
+pip install 'spinner[exporter]'
+```
+
 ## Contributing
 
 To learn how to set up your development environment and contribute to Spinner, please refer to the [Contribution Guidelines](docs/contribute.md).
