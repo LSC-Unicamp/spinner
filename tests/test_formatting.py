@@ -3,10 +3,17 @@ import sys
 from pathlib import Path
 
 
-def pytest_sessionstart(session):
+def test_repo_is_formatted():
     repo_root = Path(__file__).resolve().parents[1]
     subprocess.run(
-        [sys.executable, "-m", "black", "--check", str(repo_root)], check=True
+        [
+            sys.executable,
+            "-m",
+            "black",
+            "--check",
+            str(repo_root),
+        ],
+        check=True,
     )
     subprocess.run(
         [
