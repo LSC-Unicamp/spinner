@@ -1,0 +1,17 @@
+metadata:
+  description: Sleep using a list from --extra-args
+  version: "1.0"
+  runs: 1
+  timeout: 10
+  retry: 1
+  envvars: []
+
+applications:
+  sleep_list:
+    command: >
+      sleep {{ sleep_time }}
+
+benchmarks:
+  sleep_list:
+    dummy:
+      - 0

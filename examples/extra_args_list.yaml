@@ -1,0 +1,17 @@
+metadata:
+  description: Echo hosts from --extra-args flag
+  version: "1.0"
+  runs: 1
+  timeout: 10
+  retry: 1
+  envvars: [PATH, USER]
+
+applications:
+  echo_hosts:
+    command: >
+      echo {{ hosts }}
+
+benchmarks:
+  echo_hosts:
+    dummy:
+      - 0
