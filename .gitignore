@@ -5,7 +5,9 @@ gmon.out
 sd_env.sh
 *.pkl
 *.html
+*.ipynb
 output/
+output-*/
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
