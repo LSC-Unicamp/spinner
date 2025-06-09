@@ -67,7 +67,22 @@ spinner run docs/examples/extra_args_list.yaml --extra-args "hosts=sorgan-cpu1,s
 
 The `hosts` value remains a single string and is not expanded into a list.
 
-## 5. Timeout Handling
+## 5. Extra Args with List Values
+
+Demonstrates passing a list of values to be swept using the `--extra-args`
+flag. Each value will result in a separate run.
+
+```yaml
+--8<-- "./docs/examples/extra_args_sleep_list.yaml"
+```
+
+**How to run**:
+
+```bash
+spinner run docs/examples/extra_args_sleep_list.yaml --extra-args 'sleep_time=[1,2]'
+```
+
+## 6. Timeout Handling
 
 Demonstrates automatic timeout behavior. If a command exceeds the specified timeout, Spinner stops it and records a failure (optionally rerunning if `retry` is enabled).
 

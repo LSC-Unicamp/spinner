@@ -1,6 +1,7 @@
 import re
 
 import click
+import yaml
 
 
 class ExtraArgs(click.ParamType):
@@ -18,4 +19,10 @@ class ExtraArgs(click.ParamType):
             )
 
         pairs = self.parse.findall(value)
-        return {key: value for key, value in pairs}
+        result = {}
+        for key, val in pairs:
+            try:
+                result[key] = yaml.safe_load(val)
+            except Exception:
+                result[key] = val
+        return result

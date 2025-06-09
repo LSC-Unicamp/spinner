@@ -2,9 +2,9 @@ name: Spinner test
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   test:
@@ -36,6 +36,9 @@ jobs:
       - name: Extra Args comma test
         run: |
           spinner run docs/examples/extra_args_list.yaml --extra-args "hosts=sorgan-cpu1,sorgan-cpu2"
+      - name: Extra Args list test
+        run: |
+          spinner run docs/examples/extra_args_sleep_list.yaml --extra-args 'sleep_time=[1,2]'
       - name: Capture output test
         run: |
           spinner run docs/examples/capture_output.yaml
