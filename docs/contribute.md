@@ -179,14 +179,14 @@ git tag -d v0.0.2
 
 ## Build Automation with GitHub Actions
 
-Our project uses GitHub Actions to automate the build and deployment process. When a new tag is pushed to the repository (matching `v*.*.*`), the build bot is triggered to:
+Our project uses GitHub Actions to automate the build and deployment process. When a new tag is pushed to the repository (matching `v*`), the build bot is triggered to:
 
 - **Build the Package**: Create source and wheel distributions of the package.
 - **Publish to PyPI**: Upload the distributions to PyPI using Twine.
 
 ### How the Build Bot Works
 
-1. **Trigger**: The workflow is triggered on pushing tags that match the pattern `v*.*.*`.
+1. **Trigger**: The workflow is triggered on pushing tags that match the pattern `v*`.
 2. **Workflow File**: The workflow is defined in `.github/workflows/publish.yml` or a similarly named CI file.
 3. **Steps**:
    - **Checkout Code**: Fetches the repository code and tags.
