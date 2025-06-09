@@ -71,7 +71,15 @@ def run(app, config, output, extra_args) -> None:
 def export(app, input) -> None:
     """Export benchmark data."""
     path = importlib.resources.files("spinner.exporter") / "reporter.ipynb"
-    spinner.exporter.run(path, pkl_db_path=os.path.abspath(input.name))
+    try:
+        exporter = importlib.import_module("spinner.exporter")
+        exporter.run(path, pkl_db_path=os.path.abspath(input.name))
+    except (ImportError, RuntimeError) as error:
+        app.print(
+            "[b red]ERROR[/]: Export requires optional Jupyter dependencies.\n"
+            "Install them with 'pip install spinner[notebook]'."
+        )
+        raise SystemExit(1) from error
 
 
 def main():

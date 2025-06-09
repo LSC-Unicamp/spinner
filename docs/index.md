@@ -30,6 +30,13 @@ python3 -m pip install pip --upgrade
    pip install spinner
    ```
 
+   To use the `spinner export` command you will also need the optional
+   Jupyter dependencies:
+
+   ```bash
+   pip install 'spinner[notebook]'
+   ```
+
 2. **Create a YAML file** defining parameters and commands. For a minimal example:
 
    ```yaml

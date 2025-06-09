@@ -160,6 +160,13 @@ Spinner builds the Cartesian product of every parameter list. Two params with th
 
 ## Spinner Export
 
+The export command relies on Jupyter and plotting libraries that are not
+installed with the minimal package. Install them via:
+
+```bash
+pip install 'spinner[notebook]'
+```
+
 ```bash
 spinner export -i output.pkl
 ```
