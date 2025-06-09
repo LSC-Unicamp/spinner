@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from spinner.schema import SpinnerMetadata
+from spinner.schema import SpinnerMetadata, SpinnerBenchmark
 
 # TEST: metadata -----------------------------------------------------------------------
 
@@ -81,3 +81,39 @@ def metadata_no_retry(metadata):
 
 def test_metadata_retry_missing(metadata_no_retry):
     SpinnerMetadata(**metadata_no_retry)
+
+
+def test_benchmark_zip_basic():
+    bench = SpinnerBenchmark(
+        {
+            "image": ["a", "b"],
+            "tb_path": ["p1", "p2"],
+            "zip": ["image", "tb_path"],
+        }
+    )
+
+    combos = bench.sweep_parameters()
+
+    assert combos == [
+        {"image": "a", "tb_path": "p1"},
+        {"image": "b", "tb_path": "p2"},
+    ]
+    assert bench.num_jobs == 2
+
+
+def test_benchmark_zip_with_extra():
+    bench = SpinnerBenchmark(
+        {
+            "image": ["a", "b"],
+            "tb_path": ["p1", "p2"],
+            "zip": ["image", "tb_path"],
+            "kind": ["x", "y"],
+        }
+    )
+
+    combos = bench.sweep_parameters()
+    # zipped pairs cross with other params
+    assert len(combos) == 4
+    images = {c["image"] for c in combos}
+    assert images == {"a", "b"}
+    assert bench.num_jobs == 4

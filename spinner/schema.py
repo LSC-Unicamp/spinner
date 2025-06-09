@@ -246,30 +246,58 @@ class SpinnerBenchmark(RootModel):
 
     @cached_property
     def parameters(self) -> set[str]:
-        return set(self.root.keys())
+        return set(k for k in self.root.keys() if k != "zip")
 
     @property
     def keys(self) -> list[str]:
-        return list(self.root.keys())
+        return [k for k in self.root.keys() if k != "zip"]
 
     @property
     def values(self) -> list[str]:
-        return list(self.root.values())
+        return [v for k, v in self.root.items() if k != "zip"]
 
     @cached_property
     def num_jobs(self) -> int:
-        return math.prod(len(x) for x in self.root.values())
+        zip_keys: list[str] | None = self.root.get("zip")  # type: ignore[assignment]
+        if zip_keys:
+            zipped_len = len(self.root[zip_keys[0]])
+            for key in zip_keys[1:]:
+                if len(self.root[key]) != zipped_len:
+                    raise ValueError("zipped parameters must have the same length")
+            other = math.prod(len(v) for k, v in self.root.items() if k not in {*zip_keys, "zip"})
+            return zipped_len * other
+        return math.prod(len(v) for k, v in self.root.items() if k != "zip")
 
     def sweep_parameters(
         self, extra: dict[str, str] | None = None
     ) -> list[dict[str, Any]]:
         keys = self.keys
         values = self.values
+
+        zip_keys: list[str] | None = self.root.get("zip")  # type: ignore[assignment]
+        zipped_sets: list[dict[str, Any]] = [dict()]
+        if zip_keys:
+            zipped_values = [self.root[k] for k in zip_keys]
+            length = len(zipped_values[0])
+            for v in zipped_values[1:]:
+                if len(v) != length:
+                    raise ValueError("zipped parameters must have the same length")
+            zipped_sets = [dict(zip(zip_keys, combo)) for combo in zip(*zipped_values)]
+            keys = [k for k in keys if k not in zip_keys]
+            values = [self.root[k] for k in keys]
+
         if extra is not None:
             keys.extend(extra.keys())
             values.extend(extra.values())
 
-        return list(dict(zip(keys, x)) for x in it.product(*values))
+        combos = list(it.product(*values)) if values else [tuple()]
+        results = []
+        for zipped in zipped_sets:
+            for prod in combos:
+                params = dict(zip(keys, prod))
+                params.update(zipped)
+                results.append(params)
+        return results
 
 
 class SpinnerBenchmarks(RootModel):

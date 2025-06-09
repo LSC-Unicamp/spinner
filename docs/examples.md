@@ -66,6 +66,19 @@ spinner run docs/examples/timeout_test.yaml
 
 Spinner will attempt to run both `sleep_amount` values; the 200-second sleep will hit the 5-second timeout.
 
+## 5. Zipping Parameters
+
+Sometimes you want two parameters to vary together rather than producing all
+possible combinations. Add a `zip` key under your benchmark to pair parameter
+lists element-wise.
+
+```yaml
+--8<-- "./docs/examples/zip_pairs.yaml"
+```
+
+This example runs `ompc_baseline.sif` with `tb_baseline/main` and
+`ompc_better_sched.sif` with `tb_better_sched/main`.
+
 ---
 
 **Tip**: Use the `plot` directives in your YAML configs to automatically generate charts from the collected data. For more details, see the `capture_output.yaml` example’s `plot` section.
