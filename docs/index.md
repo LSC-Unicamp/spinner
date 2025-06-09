@@ -34,7 +34,7 @@ python3 -m pip install pip --upgrade
    Jupyter dependencies:
 
    ```bash
-   pip install 'spinner[notebook]'
+   pip install 'spinner[exporter]'
    ```
 
 2. **Create a YAML file** defining parameters and commands. For a minimal example:

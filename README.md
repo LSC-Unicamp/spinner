@@ -19,7 +19,7 @@ pip install spinner
 To enable the optional export features that rely on Jupyter, install with:
 
 ```bash
-pip install 'spinner[notebook]'
+pip install 'spinner[exporter]'
 ```
 
 ## Contributing

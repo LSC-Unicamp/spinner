@@ -4,7 +4,7 @@ def run(*args, **kwargs):
     except ImportError as exc:  # pragma: no cover - runtime check
         raise RuntimeError(
             "Export requires optional Jupyter dependencies. "
-            "Install with `pip install spinner[notebook]`."
+            "Install with `pip install spinner[exporter]`."
         ) from exc
 
     return run_reporter(*args, **kwargs)

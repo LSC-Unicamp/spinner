@@ -77,7 +77,7 @@ def export(app, input) -> None:
     except (ImportError, RuntimeError) as error:
         app.print(
             "[b red]ERROR[/]: Export requires optional Jupyter dependencies.\n"
-            "Install them with 'pip install spinner[notebook]'."
+            "Install them with 'pip install spinner[exporter]'."
         )
         raise SystemExit(1) from error
 

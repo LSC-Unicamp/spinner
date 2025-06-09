@@ -164,7 +164,7 @@ The export command relies on Jupyter and plotting libraries that are not
 installed with the minimal package. Install them via:
 
 ```bash
-pip install 'spinner[notebook]'
+pip install 'spinner[exporter]'
 ```
 
 ```bash

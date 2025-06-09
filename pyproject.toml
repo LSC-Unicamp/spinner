@@ -32,7 +32,7 @@ docs = [
     "mkdocs-material==9.5.40",
     "mkdocs-include-markdown-plugin==7.1.5",
 ]
-notebook = [
+exporter = [
     "ipykernel~=6.29",
     "nbconvert~=7.16",
     "nbformat~=5.10",
