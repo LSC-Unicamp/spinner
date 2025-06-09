@@ -271,34 +271,45 @@ class SpinnerBenchmark(RootModel):
         return math.prod(len(v) for k, v in self.root.items() if k != "zip")
 
     def sweep_parameters(
-        self, extra: dict[str, str] | None = None
+        self, extra: dict[str, Any] | None = None
     ) -> list[dict[str, Any]]:
-        keys = self.keys
-        values = self.values
+        # Start with all defined keys/values
+        keys = list(self.keys)
+        values = list(self.values)
 
+        # Handle any “zip”-grouped parameters
         zip_keys: list[str] | None = self.root.get("zip")  # type: ignore[assignment]
         zipped_sets: list[dict[str, Any]] = [dict()]
         if zip_keys:
+            # collect and sanity-check zipped lists
             zipped_values = [self.root[k] for k in zip_keys]
             length = len(zipped_values[0])
             for v in zipped_values[1:]:
                 if len(v) != length:
                     raise ValueError("zipped parameters must have the same length")
+            # build per-index dicts of zipped parameters
             zipped_sets = [dict(zip(zip_keys, combo)) for combo in zip(*zipped_values)]
+            # remove those keys from the main sweep
             keys = [k for k in keys if k not in zip_keys]
             values = [self.root[k] for k in keys]
 
+        # Incorporate any “extra” parameters
         if extra is not None:
-            keys.extend(extra.keys())
-            values.extend(extra.values())
+            for k, v in extra.items():
+                keys.append(k)
+                # wrap single values in a list
+                values.append(v if isinstance(v, list) else [v])
 
+        # Build the Cartesian product of all value-lists
         combos = list(it.product(*values)) if values else [tuple()]
-        results = []
+        results: list[dict[str, Any]] = []
+        # For each zipped set and each combo, merge into one param dict
         for zipped in zipped_sets:
-            for prod in combos:
-                params = dict(zip(keys, prod))
+            for combo in combos:
+                params = dict(zip(keys, combo))
                 params.update(zipped)
                 results.append(params)
+
         return results
 
 
