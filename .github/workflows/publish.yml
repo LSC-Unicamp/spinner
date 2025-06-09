@@ -3,7 +3,7 @@ name: Publish Package to PyPI
 on:
   push:
     tags:
-      - 'v*.*.*'  # Matches tags like v1.0.0
+      - 'v*'  # Matches tags like v1.0.0 or v1.0.0b1
 
 jobs:
   publish:
