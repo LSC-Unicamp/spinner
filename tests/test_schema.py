@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from spinner.schema import SpinnerMetadata, SpinnerBenchmark
+from spinner.schema import SpinnerBenchmark, SpinnerMetadata
 
 # TEST: metadata -----------------------------------------------------------------------
 
