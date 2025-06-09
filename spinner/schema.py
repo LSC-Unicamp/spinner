@@ -264,7 +264,9 @@ class SpinnerBenchmark(RootModel):
             for key in zip_keys[1:]:
                 if len(self.root[key]) != zipped_len:
                     raise ValueError("zipped parameters must have the same length")
-            other = math.prod(len(v) for k, v in self.root.items() if k not in {*zip_keys, "zip"})
+            other = math.prod(
+                len(v) for k, v in self.root.items() if k not in {*zip_keys, "zip"}
+            )
             return zipped_len * other
         return math.prod(len(v) for k, v in self.root.items() if k != "zip")
 
