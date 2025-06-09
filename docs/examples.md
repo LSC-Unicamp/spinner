@@ -50,7 +50,24 @@ spinner run docs/examples/extra_args.yaml --extra-args "extra_time=4"
 
 Here, `extra_time=2` is added on top of `sleep_ammount`.
 
-## 4. Timeout Handling
+## 4. Extra Args with Comma Values
+
+Demonstrates passing a value that contains commas without it being split
+into a list. The command simply echoes the provided hosts string.
+
+```yaml
+--8<-- "./docs/examples/extra_args_list.yaml"
+```
+
+**How to run**:
+
+```bash
+spinner run docs/examples/extra_args_list.yaml --extra-args "hosts=sorgan-cpu1,sorgan-cpu2"
+```
+
+The `hosts` value remains a single string and is not expanded into a list.
+
+## 5. Timeout Handling
 
 Demonstrates automatic timeout behavior. If a command exceeds the specified timeout, Spinner stops it and records a failure (optionally rerunning if `retry` is enabled).
 
