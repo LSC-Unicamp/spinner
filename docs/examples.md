@@ -62,7 +62,7 @@ into a list. The command simply echoes the provided hosts string.
 **How to run**:
 
 ```bash
-spinner run docs/examples/extra_args_list.yaml --extra-args "hosts=sorgan-cpu1,sorgan-cpu2"
+spinner run docs/examples/extra_args_list.yaml --extra-args "hosts=machineA,machineB"
 ```
 
 The `hosts` value remains a single string and is not expanded into a list.
