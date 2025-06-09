@@ -1,13 +1,13 @@
 name: Publish Package to PyPI
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - 'v*.*.*'
 
 jobs:
   publish:
-    if: startsWith(github.event.release.tag_name, 'v')
-       && github.event.release.target_commitish == 'main'
+    if: github.ref_type == 'tag' && startsWith(github.ref, 'refs/tags/v')
 
     steps:
       - name: Check out code
