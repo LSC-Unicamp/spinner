@@ -126,11 +126,9 @@ class SpinnerLambda(RootModel):
 class SpinnerCaptureAll(BaseModel):
     type: Literal["all"]
     name: str
-    func: SpinnerLambda = Field(alias="lambda")
 
     def process(self, input: str) -> tuple[str, Any]:
-        capture = None
-        return self.name, capture
+        return self.name, input
 
 
 class SpinnerCaptureMatches(BaseModel):
