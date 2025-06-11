@@ -100,6 +100,16 @@ capture:
       )
 ```
 
+To capture the entire stdout/stderr text without parsing, you can use `type: all`:
+
+```yaml
+capture:
+  - type: all
+    name: raw_output
+```
+
+See `tests/test_capture_all.py` for a working example.
+
 ##### plot
 
 The `plot` section provides a minimal configuration to generate quick visualizations of the collected results. Each entry defines a plot with `x_axis` and `y_axis`, which must reference existing columns in the dataframe. Optionally, a `group_by` field allows aggregation (via mean) across runs with the same value for that key, useful for summarizing repeated experiments. These plots serve as a quick-look feature, and the real customization is intended to happen later in the exported Jupyter notebook, where users can modify and extend the visualization logic freely.
