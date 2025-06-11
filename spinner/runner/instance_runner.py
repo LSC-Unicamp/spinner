@@ -64,6 +64,7 @@ class InstanceRunner:
         timeout = self.config.metadata.timeout
         retry = self.config.metadata.retry
         retry_codes = self.config.metadata.retry_return_codes
+        use_codes = self.config.metadata.retry_use_return_code
 
         try:
             command = self.application.render(self.environment, **parameters)
@@ -80,6 +81,7 @@ class InstanceRunner:
                 timeout=timeout,
                 retry=retry,
                 retry_codes=retry_codes,
+                use_codes=use_codes,
             )
 
     def run_command(
@@ -91,15 +93,19 @@ class InstanceRunner:
         timeout: float | None = None,
         retry: int | None = None,
         retry_codes: list[int] | None = None,
+        use_codes: bool = True,
     ) -> None:
         """Run a command and capture its output."""
         stdout, stderr, retcode, elapsed = self.launch_process_with_retry(
-            command, timeout, retry, retry_codes
+            command, timeout, retry, retry_codes, use_codes
         )
+        success_codes = set(self.application.successful_return_codes or [0])
+        fail_codes = set(self.application.failed_return_codes)
 
-        if retcode != 0:
-            self.app.error("Failed to run command.")
-            return
+        if use_codes:
+            if retcode in fail_codes or retcode not in success_codes:
+                self.app.error("Failed to run command.")
+                return
 
         output = "\n".join([stdout, stderr])
         captures = self.process_captures(output)
@@ -119,10 +125,11 @@ class InstanceRunner:
         timeout: float | None = None,
         retry: int | None = None,
         retry_codes: list[int] | None = None,
+        use_codes: bool = True,
     ) -> tuple[str, str, int, float]:
         """Launch a process, retrying in case of failure."""
         remaining_tries = retry or 1
-        codes = set(retry_codes or [])
+        codes = set(retry_codes or []) if use_codes else set()
 
         while remaining_tries > 0:
             remaining_tries -= 1

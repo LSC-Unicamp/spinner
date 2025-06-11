@@ -50,7 +50,7 @@ benchmarks:
 
 | Block | Governs | Key fields |
 |-------|---------|------------|
-| **`metadata`** | Global run policy | `description`, `version`, `runs`, `timeout`, `retry`, `retry_return_codes`, `envvars` |
+| **`metadata`** | Global run policy | `description`, `version`, `runs`, `timeout`, `retry`, `retry_use_return_code`, `retry_return_codes`, `envvars` |
 | **`applications`** | How to run each binary/script **and** how to scrape its output | `command`, `capture`, `plot` |
 | **`benchmarks`** | Parameter sweep matrix | `<application_name>: <param_list>` |
 
@@ -60,9 +60,8 @@ benchmarks:
 * `runs` – how many times Spinner repeats **each** benchmark point.
 * `timeout` – wall‑clock in seconds.
 * `retry` – `false` or an integer count of auto‑retries.
-* `retry_return_codes` – list of exit codes that trigger another attempt.
-  Timeout errors use `-1` as their return code; include `-1` in this list if
-  you want Spinner to retry on timeouts.
+* `retry_use_return_code` – when `true`, Spinner treats non‑successful return codes as failures.
+* `retry_return_codes` – list of exit codes that trigger another attempt. Timeout errors use `-1` as their return code; include `-1` in this list if you want Spinner to retry on timeouts.
 * `envvars` – list of variables to copy into the subprocess (`["PATH", "OMP_*", "*"]` allowed; globbing works).
 
 All of this is stored inside the Pickle so you can audit or reproduce the run later.
@@ -84,7 +83,13 @@ applications:
   sleep_bench:
     command: >
       sleep {{sleep_ammount + (extra_time | int)}}
+    successful_return_codes: [0]
+    failed_return_codes: []
 ```
+The `successful_return_codes` and `failed_return_codes` lists control how Spinner
+interprets the program's exit status. Codes listed under `successful_return_codes`
+are considered success; any code in `failed_return_codes` results in a failure.
+If both lists are empty, return code `0` is treated as success.
 
 ##### capture
 

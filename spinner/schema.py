@@ -51,6 +51,7 @@ class SpinnerMetadata(BaseModel):
     retry: int = Field(default=0, ge=0)
     envvars: list[str] | str = Field(default_factory=list)
     retry_return_codes: list[int] = Field(default_factory=list)
+    retry_use_return_code: bool = True
 
     @field_validator("retry", mode="before")
     def validate_retry(cls, retry: int | bool) -> int:
@@ -169,6 +170,8 @@ class SpinnerApplication(BaseModel):
     command: SpinnerCommand
     capture: list[SpinnerCapture] = Field(default_factory=list)
     plot: list[SpinnerPlot] = Field(default_factory=list)
+    successful_return_codes: list[int] = Field(default_factory=lambda: [0])
+    failed_return_codes: list[int] = Field(default_factory=list)
 
     def _validate_plot(self, plot: SpinnerPlot) -> tuple[tuple[Any], str]:
         errors = []

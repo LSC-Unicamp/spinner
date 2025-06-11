@@ -1,0 +1,20 @@
+metadata:
+  description: Customize return codes
+  version: "1.0"
+  runs: 1
+  timeout: 5
+  retry: 2
+  retry_use_return_code: true
+  retry_return_codes: [1]
+  envvars: []
+
+applications:
+  always_one:
+    command: bash -c "echo ok && exit 1"
+    successful_return_codes: [1]
+    failed_return_codes: []
+
+benchmarks:
+  always_one:
+    dummy:
+      - 0
