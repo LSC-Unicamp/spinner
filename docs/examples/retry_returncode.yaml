@@ -1,0 +1,17 @@
+metadata:
+  description: Retry using return code
+  version: "1.0"
+  runs: 1
+  timeout: 5
+  retry: 2
+  retry_return_codes: [42]
+  envvars: []
+
+applications:
+  fail_app:
+    command: bash -c "exit 42"
+
+benchmarks:
+  fail_app:
+    dummy:
+      - 0

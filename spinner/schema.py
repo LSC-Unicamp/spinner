@@ -50,6 +50,7 @@ class SpinnerMetadata(BaseModel):
     timeout: PositiveFloat | None = Field(default=None, gt=0.0)
     retry: int = Field(default=0, ge=0)
     envvars: list[str] | str = Field(default_factory=list)
+    retry_return_codes: list[int] = Field(default_factory=list)
 
     @field_validator("retry", mode="before")
     def validate_retry(cls, retry: int | bool) -> int:

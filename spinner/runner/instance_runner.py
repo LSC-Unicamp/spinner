@@ -63,6 +63,7 @@ class InstanceRunner:
         """Run benchmark with a single combination of parameters."""
         timeout = self.config.metadata.timeout
         retry = self.config.metadata.retry
+        retry_codes = self.config.metadata.retry_return_codes
 
         try:
             command = self.application.render(self.environment, **parameters)
@@ -72,7 +73,14 @@ class InstanceRunner:
 
         # Run the command once, for each run.
         for i in range(self.config.metadata.runs):
-            self.run_command(i, command, parameters, timeout=timeout, retry=retry)
+            self.run_command(
+                i,
+                command,
+                parameters,
+                timeout=timeout,
+                retry=retry,
+                retry_codes=retry_codes,
+            )
 
     def run_command(
         self,
@@ -82,10 +90,11 @@ class InstanceRunner:
         *,
         timeout: float | None = None,
         retry: int | None = None,
+        retry_codes: list[int] | None = None,
     ) -> None:
         """Run a command and capture its output."""
         stdout, stderr, retcode, elapsed = self.launch_process_with_retry(
-            command, timeout, retry
+            command, timeout, retry, retry_codes
         )
 
         if retcode != 0:
@@ -109,9 +118,11 @@ class InstanceRunner:
         command: str,
         timeout: float | None = None,
         retry: int | None = None,
+        retry_codes: list[int] | None = None,
     ) -> tuple[str, str, int, float]:
         """Launch a process, retrying in case of failure."""
         remaining_tries = retry or 1
+        codes = set(retry_codes or [])
 
         while remaining_tries > 0:
             remaining_tries -= 1
@@ -120,12 +131,15 @@ class InstanceRunner:
                 stdout = process.stdout
                 stderr = process.stderr
                 returncode = process.returncode
-                break
             except sp.TimeoutExpired:
                 stdout = ""
                 stderr = f"Timeout error: (limit: {timeout}s)"
                 returncode = -1
                 elapsed = float(timeout)
+
+            if remaining_tries > 0 and returncode in codes:
+                continue
+            break
 
         return (stdout, stderr, returncode, elapsed)
 
