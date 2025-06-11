@@ -50,7 +50,7 @@ benchmarks:
 
 | Block | Governs | Key fields |
 |-------|---------|------------|
-| **`metadata`** | Global run policy | `description`, `version`, `runs`, `timeout`, `retry`, `retry_use_return_code`, `envvars` |
+| **`metadata`** | Global run policy | `description`, `version`, `runs`, `timeout`, `retry`, `envvars` |
 | **`applications`** | How to run each binary/script **and** how to scrape its output | `command`, `capture`, `plot` |
 | **`benchmarks`** | Parameter sweep matrix | `<application_name>: <param_list>` |
 
@@ -60,7 +60,6 @@ benchmarks:
 * `runs` – how many times Spinner repeats **each** benchmark point.
 * `timeout` – wall‑clock in seconds.
 * `retry` – `false` or an integer count of auto‑retries.
-* `retry_use_return_code` – when `true`, Spinner checks an application's `successful_return_codes` or `failed_return_codes` to decide if another attempt is required. Timeouts always trigger a retry when retries are configured.
 * `envvars` – list of variables to copy into the subprocess (`["PATH", "OMP_*", "*"]` allowed; globbing works).
 
 All of this is stored inside the Pickle so you can audit or reproduce the run later.
@@ -87,9 +86,9 @@ applications:
 ```
 The `successful_return_codes` and `failed_return_codes` lists control how Spinner
 interprets the program's exit status. Codes listed under `successful_return_codes`
-are considered success, while those in `failed_return_codes` are failures. When
-`retry_use_return_code` is enabled, an application must define one of these lists
-(but not both).
+are considered success, while those in `failed_return_codes` are failures. Define
+only one of these lists; if both are set, Spinner raises an error during
+validation.
 
 ##### capture
 

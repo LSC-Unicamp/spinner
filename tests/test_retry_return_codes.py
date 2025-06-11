@@ -1,4 +1,6 @@
 import pandas as pd
+import pytest
+from pydantic import ValidationError
 
 from spinner.app import SpinnerApp
 from spinner.runner.instance_runner import InstanceRunner
@@ -28,7 +30,6 @@ def test_retry_on_return_code(tmp_path):
         runs=1,
         timeout=5,
         retry=2,
-        retry_use_return_code=True,
         envvars=[],
     )
 
@@ -75,7 +76,6 @@ def test_retry_on_timeout(tmp_path):
         runs=1,
         timeout=0.1,
         retry=2,
-        retry_use_return_code=False,
         envvars=[],
     )
 
@@ -116,7 +116,6 @@ def test_successful_return_code(tmp_path):
         runs=1,
         timeout=5,
         retry=0,
-        retry_use_return_code=True,
         envvars=[],
     )
 
@@ -161,7 +160,6 @@ def test_ignore_return_code(tmp_path):
         runs=1,
         timeout=5,
         retry=1,
-        retry_use_return_code=False,
         envvars=[],
     )
 
@@ -191,3 +189,25 @@ def test_ignore_return_code(tmp_path):
     # only one attempt despite retry=1 because return codes are ignored
     assert file_path.read_text().count("run") == 1
     assert len(df) == 1
+
+
+def test_retry_requires_timeout_or_codes():
+    metadata = SpinnerMetadata(
+        description="error",
+        version="1.0",
+        runs=1,
+        timeout=None,
+        retry=1,
+        envvars=[],
+    )
+
+    applications = SpinnerApplications(
+        {"app": SpinnerApplication(command=SpinnerCommand("true"))}
+    )
+    bench = SpinnerBenchmark({"dummy": [0]})
+    benchmarks = SpinnerBenchmarks({"app": bench})
+
+    with pytest.raises(ValidationError):
+        SpinnerConfig(
+            metadata=metadata, applications=applications, benchmarks=benchmarks
+        )

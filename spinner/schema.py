@@ -50,7 +50,6 @@ class SpinnerMetadata(BaseModel):
     timeout: PositiveFloat | None = Field(default=None, gt=0.0)
     retry: int = Field(default=0, ge=0)
     envvars: list[str] | str = Field(default_factory=list)
-    retry_use_return_code: bool = True
 
     @field_validator("retry", mode="before")
     def validate_retry(cls, retry: int | bool) -> int:
@@ -393,8 +392,6 @@ class SpinnerConfig(BaseModel):
 
     def validate_return_codes(self) -> _LocationMessagePair:
         errors = []
-        if not self.metadata.retry_use_return_code:
-            return errors
 
         for name, app in self.applications.items():
             success = app.successful_return_codes
@@ -407,13 +404,36 @@ class SpinnerConfig(BaseModel):
                         "cannot set both successful and failed return codes",
                     )
                 )
-            elif not success and not fail:
+
+        return errors
+
+    def validate_retry_settings(self) -> _LocationMessagePair:
+        errors = []
+
+        if self.metadata.retry > 0:
+            has_timeout = self.metadata.timeout is not None
+            has_codes = any(
+                app.successful_return_codes or app.failed_return_codes
+                for _, app in self.applications.items()
+            )
+
+            app = SpinnerApp.get()
+            if not has_timeout and not has_codes:
                 errors.append(
                     (
-                        ("applications", name),
-                        "must define successful_return_codes or failed_return_codes when retry_use_return_code is true",
+                        ("metadata", "retry"),
+                        "retry requires a timeout or return code lists",
                     )
                 )
+            else:
+                if not has_timeout:
+                    app.warning(
+                        "retry is set but no timeout configured; relying on return codes"
+                    )
+                if not has_codes:
+                    app.warning(
+                        "retry is set but no return codes configured; relying on timeout"
+                    )
 
         return errors
 
@@ -423,6 +443,7 @@ class SpinnerConfig(BaseModel):
         errors += self.validate_benchmark_keys()
         errors += self.validate_application_placeholders()
         errors += self.validate_return_codes()
+        errors += self.validate_retry_settings()
 
         if errors:
             # Create a `ValidationError` that aggregates errors from all validators

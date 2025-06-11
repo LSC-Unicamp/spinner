@@ -4,7 +4,6 @@ metadata:
   runs: 1
   timeout: 5
   retry: 2
-  retry_use_return_code: true
   envvars: []
 
 applications:

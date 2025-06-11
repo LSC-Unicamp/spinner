@@ -63,9 +63,9 @@ class InstanceRunner:
         """Run benchmark with a single combination of parameters."""
         timeout = self.config.metadata.timeout
         retry = self.config.metadata.retry
-        use_codes = self.config.metadata.retry_use_return_code
         success_codes = self.application.successful_return_codes
         fail_codes = self.application.failed_return_codes
+        use_codes = bool(success_codes or fail_codes)
 
         try:
             command = self.application.render(self.environment, **parameters)
