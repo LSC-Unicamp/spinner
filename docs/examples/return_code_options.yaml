@@ -5,7 +5,6 @@ metadata:
   timeout: 5
   retry: 2
   retry_use_return_code: true
-  retry_return_codes: [1]
   envvars: []
 
 applications:

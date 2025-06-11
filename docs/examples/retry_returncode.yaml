@@ -4,12 +4,13 @@ metadata:
   runs: 1
   timeout: 5
   retry: 2
-  retry_return_codes: [42]
+  retry_use_return_code: true
   envvars: []
 
 applications:
   fail_app:
     command: bash -c "exit 42"
+    failed_return_codes: [42]
 
 benchmarks:
   fail_app:

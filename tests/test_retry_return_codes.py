@@ -28,12 +28,16 @@ def test_retry_on_return_code(tmp_path):
         runs=1,
         timeout=5,
         retry=2,
-        retry_return_codes=[1],
+        retry_use_return_code=True,
         envvars=[],
     )
 
     applications = SpinnerApplications(
-        {"fail": SpinnerApplication(command=SpinnerCommand(cmd))}
+        {
+            "fail": SpinnerApplication(
+                command=SpinnerCommand(cmd), failed_return_codes=[1]
+            )
+        }
     )
     bench = SpinnerBenchmark({"dummy": [0]})
     benchmarks = SpinnerBenchmarks({"fail": bench})
@@ -61,7 +65,7 @@ def test_retry_on_return_code(tmp_path):
     assert df.empty
 
 
-def test_no_retry_on_timeout_by_default(tmp_path):
+def test_retry_on_timeout(tmp_path):
     file_path = tmp_path / "count.txt"
     cmd = f"bash -c 'echo run >> {file_path}; sleep 1'"
 
@@ -71,6 +75,7 @@ def test_no_retry_on_timeout_by_default(tmp_path):
         runs=1,
         timeout=0.1,
         retry=2,
+        retry_use_return_code=False,
         envvars=[],
     )
 
@@ -97,8 +102,8 @@ def test_no_retry_on_timeout_by_default(tmp_path):
 
     runner.run_with_parameters({"dummy": 0})
 
-    # only one attempt should be made
-    assert file_path.read_text().count("run") == 1
+    # two attempts due to timeout retry
+    assert file_path.read_text().count("run") == 2
 
 
 def test_successful_return_code(tmp_path):
@@ -157,7 +162,6 @@ def test_ignore_return_code(tmp_path):
         timeout=5,
         retry=1,
         retry_use_return_code=False,
-        retry_return_codes=[1],
         envvars=[],
     )
 
@@ -184,6 +188,6 @@ def test_ignore_return_code(tmp_path):
 
     runner.run_with_parameters({"dummy": 0})
 
-    # only one attempt despite retry=1 and retry_return_codes=[1]
+    # only one attempt despite retry=1 because return codes are ignored
     assert file_path.read_text().count("run") == 1
     assert len(df) == 1

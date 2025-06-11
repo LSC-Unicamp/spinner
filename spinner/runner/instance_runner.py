@@ -63,8 +63,9 @@ class InstanceRunner:
         """Run benchmark with a single combination of parameters."""
         timeout = self.config.metadata.timeout
         retry = self.config.metadata.retry
-        retry_codes = self.config.metadata.retry_return_codes
         use_codes = self.config.metadata.retry_use_return_code
+        success_codes = self.application.successful_return_codes
+        fail_codes = self.application.failed_return_codes
 
         try:
             command = self.application.render(self.environment, **parameters)
@@ -80,7 +81,8 @@ class InstanceRunner:
                 parameters,
                 timeout=timeout,
                 retry=retry,
-                retry_codes=retry_codes,
+                success_codes=success_codes,
+                fail_codes=fail_codes,
                 use_codes=use_codes,
             )
 
@@ -92,18 +94,29 @@ class InstanceRunner:
         *,
         timeout: float | None = None,
         retry: int | None = None,
-        retry_codes: list[int] | None = None,
+        success_codes: list[int] | None = None,
+        fail_codes: list[int] | None = None,
         use_codes: bool = True,
     ) -> None:
         """Run a command and capture its output."""
         stdout, stderr, retcode, elapsed = self.launch_process_with_retry(
-            command, timeout, retry, retry_codes, use_codes
+            command,
+            timeout,
+            retry,
+            success_codes,
+            fail_codes,
+            use_codes,
         )
-        success_codes = set(self.application.successful_return_codes or [0])
-        fail_codes = set(self.application.failed_return_codes)
+        s_codes = set(success_codes or [])
+        f_codes = set(fail_codes or [])
 
         if use_codes:
-            if retcode in fail_codes or retcode not in success_codes:
+            fail_condition = False
+            if s_codes and retcode not in s_codes:
+                fail_condition = True
+            if f_codes and retcode in f_codes:
+                fail_condition = True
+            if fail_condition:
                 self.app.error("Failed to run command.")
                 return
 
@@ -124,12 +137,14 @@ class InstanceRunner:
         command: str,
         timeout: float | None = None,
         retry: int | None = None,
-        retry_codes: list[int] | None = None,
+        success_codes: list[int] | None = None,
+        fail_codes: list[int] | None = None,
         use_codes: bool = True,
     ) -> tuple[str, str, int, float]:
         """Launch a process, retrying in case of failure."""
         remaining_tries = retry or 1
-        codes = set(retry_codes or []) if use_codes else set()
+        s_codes = set(success_codes or [])
+        f_codes = set(fail_codes or [])
 
         while remaining_tries > 0:
             remaining_tries -= 1
@@ -143,8 +158,16 @@ class InstanceRunner:
                 stderr = f"Timeout error: (limit: {timeout}s)"
                 returncode = -1
                 elapsed = float(timeout)
+            retry_due_to_code = False
+            if returncode == -1:
+                retry_due_to_code = True
+            elif use_codes:
+                if s_codes and returncode not in s_codes:
+                    retry_due_to_code = True
+                if f_codes and returncode in f_codes:
+                    retry_due_to_code = True
 
-            if remaining_tries > 0 and returncode in codes:
+            if remaining_tries > 0 and retry_due_to_code:
                 continue
             break
 

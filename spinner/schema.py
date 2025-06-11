@@ -50,7 +50,6 @@ class SpinnerMetadata(BaseModel):
     timeout: PositiveFloat | None = Field(default=None, gt=0.0)
     retry: int = Field(default=0, ge=0)
     envvars: list[str] | str = Field(default_factory=list)
-    retry_return_codes: list[int] = Field(default_factory=list)
     retry_use_return_code: bool = True
 
     @field_validator("retry", mode="before")
@@ -170,7 +169,7 @@ class SpinnerApplication(BaseModel):
     command: SpinnerCommand
     capture: list[SpinnerCapture] = Field(default_factory=list)
     plot: list[SpinnerPlot] = Field(default_factory=list)
-    successful_return_codes: list[int] = Field(default_factory=lambda: [0])
+    successful_return_codes: list[int] = Field(default_factory=list)
     failed_return_codes: list[int] = Field(default_factory=list)
 
     def _validate_plot(self, plot: SpinnerPlot) -> tuple[tuple[Any], str]:
@@ -392,11 +391,38 @@ class SpinnerConfig(BaseModel):
 
         return errors
 
+    def validate_return_codes(self) -> _LocationMessagePair:
+        errors = []
+        if not self.metadata.retry_use_return_code:
+            return errors
+
+        for name, app in self.applications.items():
+            success = app.successful_return_codes
+            fail = app.failed_return_codes
+
+            if success and fail:
+                errors.append(
+                    (
+                        ("applications", name, "successful_return_codes"),
+                        "cannot set both successful and failed return codes",
+                    )
+                )
+            elif not success and not fail:
+                errors.append(
+                    (
+                        ("applications", name),
+                        "must define successful_return_codes or failed_return_codes when retry_use_return_code is true",
+                    )
+                )
+
+        return errors
+
     @model_validator(mode="after")
     def validate(self) -> Self:
         errors = []
         errors += self.validate_benchmark_keys()
         errors += self.validate_application_placeholders()
+        errors += self.validate_return_codes()
 
         if errors:
             # Create a `ValidationError` that aggregates errors from all validators
