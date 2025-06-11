@@ -57,10 +57,10 @@ benchmarks:
 #### metadata
 
 * `description` – free‑text tag for the run.  
-* `runs` – how many times Spinner repeats **each** benchmark point.  
-* `timeout` – wall‑clock in seconds.  
-* `retry` – `false` or an integer count of auto‑retries.  
-* `envvars` – list of variables to copy into the subprocess (`["PATH", "OMP_*", "*"]` allowed; globbing works).  
+* `runs` – how many times Spinner repeats **each** benchmark point.
+* `timeout` – wall‑clock in seconds.
+* `retry` – `false` or an integer count of auto‑retries.
+* `envvars` – list of variables to copy into the subprocess (`["PATH", "OMP_*", "*"]` allowed; globbing works).
 
 All of this is stored inside the Pickle so you can audit or reproduce the run later.
 
@@ -81,7 +81,14 @@ applications:
   sleep_bench:
     command: >
       sleep {{sleep_ammount + (extra_time | int)}}
+    successful_return_codes: [0]
+    failed_return_codes: []
 ```
+The `successful_return_codes` and `failed_return_codes` lists control how Spinner
+interprets the program's exit status. Codes listed under `successful_return_codes`
+are considered success, while those in `failed_return_codes` are failures. Define
+only one of these lists; if both are set, Spinner raises an error during
+validation.
 
 ##### capture
 

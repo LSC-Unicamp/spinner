@@ -166,6 +166,8 @@ class SpinnerApplication(BaseModel):
     command: SpinnerCommand
     capture: list[SpinnerCapture] = Field(default_factory=list)
     plot: list[SpinnerPlot] = Field(default_factory=list)
+    successful_return_codes: list[int] = Field(default_factory=list)
+    failed_return_codes: list[int] = Field(default_factory=list)
 
     def _validate_plot(self, plot: SpinnerPlot) -> tuple[tuple[Any], str]:
         errors = []
@@ -386,11 +388,60 @@ class SpinnerConfig(BaseModel):
 
         return errors
 
+    def validate_return_codes(self) -> _LocationMessagePair:
+        errors = []
+
+        for name, app in self.applications.items():
+            success = app.successful_return_codes
+            fail = app.failed_return_codes
+
+            if success and fail:
+                errors.append(
+                    (
+                        ("applications", name, "successful_return_codes"),
+                        "cannot set both successful and failed return codes",
+                    )
+                )
+
+        return errors
+
+    def validate_retry_settings(self) -> _LocationMessagePair:
+        errors = []
+
+        if self.metadata.retry > 0:
+            has_timeout = self.metadata.timeout is not None
+            has_codes = any(
+                app.successful_return_codes or app.failed_return_codes
+                for _, app in self.applications.items()
+            )
+
+            app = SpinnerApp.get()
+            if not has_timeout and not has_codes:
+                errors.append(
+                    (
+                        ("metadata", "retry"),
+                        "retry requires a timeout or return code lists",
+                    )
+                )
+            else:
+                if not has_timeout:
+                    app.warning(
+                        "retry is set but no timeout configured; relying on return codes"
+                    )
+                if not has_codes:
+                    app.warning(
+                        "retry is set but no return codes configured; relying on timeout"
+                    )
+
+        return errors
+
     @model_validator(mode="after")
     def validate(self) -> Self:
         errors = []
         errors += self.validate_benchmark_keys()
         errors += self.validate_application_placeholders()
+        errors += self.validate_return_codes()
+        errors += self.validate_retry_settings()
 
         if errors:
             # Create a `ValidationError` that aggregates errors from all validators
