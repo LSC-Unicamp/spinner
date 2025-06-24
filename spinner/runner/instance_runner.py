@@ -72,7 +72,9 @@ class InstanceRunner:
 
         # Run the command once, for each run.
         for i in range(self.config.metadata.runs):
-            self.run_command(i, command, parameters, timeout=timeout, retry=retry)
+            self.run_command(
+                i, command, parameters, timeout=timeout, retry=retry
+            )
 
     def run_command(
         self,
@@ -85,6 +87,7 @@ class InstanceRunner:
     ) -> None:
         """Run a command and capture its output."""
         stdout, stderr, retcode, elapsed = self.launch_process_with_retry(
+        stdout, stderr, retcode, elapsed, timed_out = self.launch_process_with_retry(
             command, timeout, retry
         )
 
@@ -110,11 +113,15 @@ class InstanceRunner:
         timeout: float | None = None,
         retry: int | None = None,
     ) -> tuple[str, str, int, float]:
+    ) -> tuple[str, str, int, float, bool]:
         """Launch a process, retrying in case of failure."""
         remaining_tries = retry or 1
+        attempt = 0
 
         while remaining_tries > 0:
             remaining_tries -= 1
+            attempt += 1
+            timed_out = False
             try:
                 process, elapsed = self.execute_process_with_timeout(command, timeout)
                 stdout = process.stdout
@@ -122,12 +129,19 @@ class InstanceRunner:
                 returncode = process.returncode
                 break
             except sp.TimeoutExpired:
+                timed_out = True
                 stdout = ""
                 stderr = f"Timeout error: (limit: {timeout}s)"
                 returncode = -1
                 elapsed = float(timeout)
 
         return (stdout, stderr, returncode, elapsed)
+            success = self.config.metadata.is_success(returncode)
+            if success and not timed_out:
+                break
+
+            remaining_tries -= 1
+        return (stdout, stderr, returncode, elapsed, timed_out)
 
     def execute_process_with_timeout(
         self, command: str, timeout: float | None = None
