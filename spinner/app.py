@@ -44,10 +44,6 @@ class SpinnerApp(Console):
         if self.verbosity >= 2:
             self.logger.info(*args, **kwargs)
 
-    # Backwards compatibility
-    vinfo = vprint
-    vvinfo = vvprint
-
     def debug(self, *args, **kwargs) -> None:
         self.logger.debug(*args, **kwargs)
 
