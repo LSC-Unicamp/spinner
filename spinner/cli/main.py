@@ -1,6 +1,5 @@
 import importlib
 import os
-import logging
 
 from click import File
 from click import argument as arg
@@ -10,7 +9,7 @@ from click import pass_context, pass_obj
 from pydantic import ValidationError
 
 import spinner
-from spinner.app import SpinnerApp, DEFAULT_LOG_LEVEL
+from spinner.app import SpinnerApp
 from spinner.schema import SpinnerConfig
 
 from .util import ExtraArgs
@@ -44,17 +43,6 @@ def cli(ctx, verbose) -> None:
     """Spinner: Reproducible benchmarks."""
     app = SpinnerApp.get()
     app.verbosity = verbose
-    level_name = os.environ.get("LOGLEVEL", DEFAULT_LOG_LEVEL)
-    if verbose > 0 and "LOGLEVEL" not in os.environ:
-        level_name = "INFO"
-    level = getattr(logging, level_name.upper(), logging.WARNING)
-    # Adjust both the spinner logger and the root logger to ensure INFO
-    # messages propagate when verbosity is enabled.
-    root = logging.getLogger()
-    logging.getLogger("spinner").setLevel(level)
-    root.setLevel(level)
-    for handler in root.handlers:
-        handler.setLevel(level)
     ctx.obj = app
 
 

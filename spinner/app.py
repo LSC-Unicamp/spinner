@@ -18,7 +18,7 @@ DEFAULT_LOG_LEVEL = os.environ.get("LOGLEVEL", "warning").upper()
 
 
 class SpinnerApp(Console):
-    verbosity: int
+    _verbosity: int
 
     @staticmethod
     def get() -> Self:
@@ -27,9 +27,26 @@ class SpinnerApp(Console):
 
     def __init__(self, verbosity=0, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.verbosity = verbosity
         self.logger = logging.getLogger("spinner")
+        self.verbosity = verbosity
         self.logger.debug("App started.")
+
+    @property
+    def verbosity(self) -> int:  # type: ignore[override]
+        return self._verbosity
+
+    @verbosity.setter
+    def verbosity(self, value: int) -> None:  # type: ignore[override]
+        self._verbosity = value
+        level_name = os.environ.get("LOGLEVEL", DEFAULT_LOG_LEVEL)
+        if value > 0 and "LOGLEVEL" not in os.environ:
+            level_name = "INFO"
+        level = getattr(logging, level_name.upper(), logging.WARNING)
+        root = logging.getLogger()
+        self.logger.setLevel(level)
+        root.setLevel(level)
+        for handler in root.handlers:
+            handler.setLevel(level)
 
     def __del__(self) -> None:
         self.logger.debug("App finished.")
