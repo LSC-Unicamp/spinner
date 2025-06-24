@@ -48,7 +48,13 @@ def cli(ctx, verbose) -> None:
     if verbose > 0 and "LOGLEVEL" not in os.environ:
         level_name = "INFO"
     level = getattr(logging, level_name.upper(), logging.WARNING)
+    # Adjust both the spinner logger and the root logger to ensure INFO
+    # messages propagate when verbosity is enabled.
+    root = logging.getLogger()
     logging.getLogger("spinner").setLevel(level)
+    root.setLevel(level)
+    for handler in root.handlers:
+        handler.setLevel(level)
     ctx.obj = app
 
 
