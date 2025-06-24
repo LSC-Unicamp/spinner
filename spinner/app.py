@@ -35,12 +35,18 @@ class SpinnerApp(Console):
         self.logger.debug("App finished.")
 
     def vprint(self, *args, **kwargs) -> None:
+        """Log a message when verbosity >= 1."""
         if self.verbosity >= 1:
-            self.print(*args, **kwargs)
+            self.logger.info(*args, **kwargs)
 
     def vvprint(self, *args, **kwargs) -> None:
+        """Log a message when verbosity >= 2."""
         if self.verbosity >= 2:
-            self.print(*args, **kwargs)
+            self.logger.info(*args, **kwargs)
+
+    # Backwards compatibility
+    vinfo = vprint
+    vvinfo = vvprint
 
     def debug(self, *args, **kwargs) -> None:
         self.logger.debug(*args, **kwargs)
@@ -58,7 +64,7 @@ class SpinnerApp(Console):
         self.logger.fatal(*args, **kwargs)
 
     def exception(self, *args, **kwargs) -> None:
-        self.logger.exception(*args, **args)
+        self.logger.exception(*args, **kwargs)
 
 
 _GLOBAL_APP = SpinnerApp()

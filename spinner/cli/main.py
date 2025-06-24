@@ -1,5 +1,6 @@
 import importlib
 import os
+import logging
 
 from click import File
 from click import argument as arg
@@ -9,7 +10,7 @@ from click import pass_context, pass_obj
 from pydantic import ValidationError
 
 import spinner
-from spinner.app import SpinnerApp
+from spinner.app import SpinnerApp, DEFAULT_LOG_LEVEL
 from spinner.schema import SpinnerConfig
 
 from .util import ExtraArgs
@@ -42,7 +43,12 @@ def _print_errors(app: SpinnerApp, exception: ValidationError) -> None:
 def cli(ctx, verbose) -> None:
     """Spinner: Reproducible benchmarks."""
     app = SpinnerApp.get()
-    app.verbose = verbose
+    app.verbosity = verbose
+    level_name = os.environ.get("LOGLEVEL", DEFAULT_LOG_LEVEL)
+    if verbose > 0 and "LOGLEVEL" not in os.environ:
+        level_name = "INFO"
+    level = getattr(logging, level_name.upper(), logging.WARNING)
+    logging.getLogger("spinner").setLevel(level)
     ctx.obj = app
 
 
