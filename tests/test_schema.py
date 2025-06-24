@@ -62,7 +62,8 @@ def metadata_invalid_timeout(metadata, request):
 
 def test_metadata_timeout_none(metadata):
     metadata["timeout"] = None
-    SpinnerMetadata(**metadata)
+    with pytest.raises(ValidationError):
+        SpinnerMetadata(**metadata)
 
 
 def test_metadata_timeout_invalid(metadata_invalid_timeout):
@@ -81,6 +82,50 @@ def metadata_no_retry(metadata):
 
 def test_metadata_retry_missing(metadata_no_retry):
     SpinnerMetadata(**metadata_no_retry)
+
+
+def test_metadata_retry_requires_policy(metadata):
+    metadata["timeout"] = None
+    metadata["retry"] = 1
+    metadata.pop("success_on_return", None)
+    metadata.pop("fail_on_return", None)
+    with pytest.raises(ValidationError):
+        SpinnerMetadata(**metadata)
+
+
+def test_metadata_success_and_fail_exclusive(metadata):
+    metadata["success_on_return"] = [0]
+    metadata["fail_on_return"] = [-1]
+    with pytest.raises(ValidationError):
+        SpinnerMetadata(**metadata)
+
+
+def test_metadata_is_success_lists():
+    md = SpinnerMetadata(
+        description="x",
+        version="1.0",
+        runs=1,
+        timeout=1,
+        retry=0,
+        envvars=[],
+        success_on_return=[0, -1],
+    )
+    assert md.is_success(0)
+    assert md.is_success(-1)
+    assert not md.is_success(1)
+
+    md = SpinnerMetadata(
+        description="x",
+        version="1.0",
+        runs=1,
+        timeout=1,
+        retry=0,
+        envvars=[],
+        fail_on_return=[-1, -6],
+    )
+    assert md.is_success(0)
+    assert not md.is_success(-1)
+    assert not md.is_success(-6)
 
 
 def test_benchmark_zip_basic():
