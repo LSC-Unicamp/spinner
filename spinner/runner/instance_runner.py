@@ -142,13 +142,23 @@ class InstanceRunner:
 
             remaining_tries -= 1
             if remaining_tries > 0:
-                self.app.vprint(
-                    f"Attempt {attempt} failed with code {returncode}. Retrying..."
-                )
+                if timed_out:
+                    self.app.vprint(
+                        f"Attempt {attempt} timed out. Retrying..."
+                    )
+                else:
+                    self.app.vprint(
+                        f"Attempt {attempt} failed with code {returncode}. Retrying..."
+                    )
             else:
-                self.app.error(
-                    f"Attempt {attempt} failed with code {returncode}. No retries left."
-                )
+                if timed_out:
+                    self.app.error(
+                        f"Attempt {attempt} timed out. No retries left."
+                    )
+                else:
+                    self.app.error(
+                        f"Attempt {attempt} failed with code {returncode}. No retries left."
+                    )
 
         return (stdout, stderr, returncode, elapsed, timed_out)
 
