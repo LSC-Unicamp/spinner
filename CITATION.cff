@@ -1,0 +1,41 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "Spinner: Enhancing HPC Experimentation with a Streamlined Parameter Sweep Tool"
+authors:
+  - family-names: Ceccato
+    given-names: Rodrigo
+  - family-names: Cleto
+    given-names: Jhonatan
+  - family-names: Leite
+    given-names: Gustavo
+  - family-names: Rigo
+    given-names: Sandro
+  - family-names: "Monsalve Diaz"
+    given-names: "Jose M"
+  - family-names: Yviquel
+    given-names: Hervé
+date-released: 2024-01-01
+url: "https://github.com/lsc-unicamp/spinner"
+preferred-citation:
+  type: conference-paper
+  title: "Spinner: Enhancing HPC Experimentation with a Streamlined Parameter Sweep Tool"
+  authors:
+    - family-names: Ceccato
+      given-names: Rodrigo
+    - family-names: Cleto
+      given-names: Jhonatan
+    - family-names: Leite
+      given-names: Gustavo
+    - family-names: Rigo
+      given-names: Sandro
+    - family-names: "Monsalve Diaz"
+      given-names: "Jose M"
+    - family-names: Yviquel
+      given-names: Hervé
+  collection-title: "2024 International Symposium on Computer Architecture and High Performance Computing Workshops (SBAC-PADW)"
+  year: 2024
+  start: 1
+  end: 11
+  publisher:
+    name: IEEE
