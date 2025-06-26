@@ -50,6 +50,8 @@ class SpinnerMetadata(BaseModel):
     timeout: PositiveFloat | None = Field(default=None, gt=0.0)
     retry: int = Field(default=0, ge=0)
     envvars: list[str] | str = Field(default_factory=list)
+    success_on_return: list[int] | None = None
+    fail_on_return: list[int] | None = None
 
     @field_validator("retry", mode="before")
     def validate_retry(cls, retry: int | bool) -> int:
@@ -64,6 +66,27 @@ class SpinnerMetadata(BaseModel):
                 "Expected list with var names or '*' for capturing everything"
             )
         return envvars
+
+    @model_validator(mode="after")
+    def validate_returns(self) -> Self:
+        if self.success_on_return is not None and self.fail_on_return is not None:
+            raise ValueError(
+                "Specify only one of success_on_return or fail_on_return"
+            )
+        if self.retry and self.timeout is None and not (
+            self.success_on_return or self.fail_on_return
+        ):
+            raise ValueError(
+                "retry requires a timeout or return code policy"
+            )
+        return self
+
+    def is_success(self, code: int) -> bool:
+        if self.success_on_return is not None:
+            return code in self.success_on_return
+        if self.fail_on_return is not None:
+            return code not in self.fail_on_return
+        return code == 0
 
     def capture_environment(self) -> dict[str, str]:
         if isinstance(self.envvars, str) and self.envvars == "*":

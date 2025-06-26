@@ -22,6 +22,14 @@ To enable the optional export features that rely on Jupyter, install with:
 pip install 'spinner[exporter]'
 ```
 
+## Logging & Verbosity
+
+Use `-v` or `-vv` with any command to increase logging output. `-v` prints each
+rendered command and retry notice. `-vv` additionally prints the command output
+and return codes. When a verbosity flag is used, the logger level is set to
+`INFO`; otherwise it falls back to the `LOGLEVEL` environment variable (default
+`WARNING`). Set `LOGLEVEL=DEBUG` to see developer messages.
+
 ## Contributing
 
 To learn how to set up your development environment and contribute to Spinner, please refer to the [Contribution Guidelines](docs/contribute.md).

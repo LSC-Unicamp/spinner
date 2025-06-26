@@ -42,7 +42,7 @@ def _print_errors(app: SpinnerApp, exception: ValidationError) -> None:
 def cli(ctx, verbose) -> None:
     """Spinner: Reproducible benchmarks."""
     app = SpinnerApp.get()
-    app.verbose = verbose
+    app.verbosity = verbose
     ctx.obj = app
 
 

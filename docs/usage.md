@@ -17,8 +17,11 @@ If you master these two verbs, you’ve mastered Spinner. Details follow.
 spinner run path/to/benchmark.yaml -o output.pkl
 ```
 
-That’s it—no hidden flags.  
 `-o / --output` names the Pickle you’ll feed to **spinner export**.
+Use `-v` or `-vv` to show the executed commands and, at the highest level,
+their outputs and return codes. When a verbosity flag is used, the logger level
+becomes `INFO`; otherwise it falls back to the `LOGLEVEL` environment variable
+(default `WARNING`). Set `LOGLEVEL=DEBUG` for developer logs.
 
 ---
 
@@ -50,7 +53,7 @@ benchmarks:
 
 | Block | Governs | Key fields |
 |-------|---------|------------|
-| **`metadata`** | Global run policy | `description`, `version`, `runs`, `timeout`, `retry`, `envvars` |
+| **`metadata`** | Global run policy | `description`, `version`, `runs`, `timeout`, `retry`, `envvars`, `success_on_return`, `fail_on_return` |
 | **`applications`** | How to run each binary/script **and** how to scrape its output | `command`, `capture`, `plot` |
 | **`benchmarks`** | Parameter sweep matrix | `<application_name>: <param_list>` |
 
@@ -60,9 +63,15 @@ benchmarks:
 * `runs` – how many times Spinner repeats **each** benchmark point.  
 * `timeout` – wall‑clock in seconds.  
 * `retry` – `false` or an integer count of auto‑retries.  
-* `envvars` – list of variables to copy into the subprocess (`["PATH", "OMP_*", "*"]` allowed; globbing works).  
+* `envvars` – list of variables to copy into the subprocess (`["PATH", "OMP_*", "*"]` allowed; globbing works).
+* `success_on_return` – list of return codes considered successful.
+* `fail_on_return` – list of return codes considered failures (all others succeed).
 
 All of this is stored inside the Pickle so you can audit or reproduce the run later.
+
+If `retry` is set without a `timeout` and no return code policy, the YAML is
+considered invalid. When a timeout happens, Spinner always retries regardless of
+the return code being marked as successful.
 
 #### applications
 
