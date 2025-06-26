@@ -1,0 +1,22 @@
+metadata:
+  description: Zipped parameter example
+  version: "1.0"
+  runs: 1
+  timeout: 10
+  retry: 0
+  envvars: []
+
+applications:
+  tb-compare:
+    command: >
+      echo {{image}} uses {{tb_path}}
+
+benchmarks:
+  tb-compare:
+    image:
+      - ompc_baseline.sif
+      - ompc_better_sched.sif
+    tb_path:
+      - tb_baseline/main
+      - tb_better_sched/main
+    zip: [image, tb_path]
