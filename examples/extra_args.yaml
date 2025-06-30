@@ -1,0 +1,18 @@
+metadata:
+  description: Sleep check using --extra-args flag
+  version: "1.0"
+  runs: 1
+  timeout: 10
+  retry: 1
+  envvars: [PATH, USER]
+
+applications:
+  sleep_test:
+    command:
+        sleep {{sleep_ammount + (extra_time | int)}}
+
+benchmarks:
+  sleep_test:
+    sleep_ammount:
+      - 1
+      - 2

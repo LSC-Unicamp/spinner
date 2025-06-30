@@ -1,0 +1,38 @@
+metadata:
+  description: shell time capture output
+  version: "1.0"
+  runs: 5
+  timeout: 100
+  retry: 10
+  envvars: []
+
+applications:
+  sleep:
+    command: >
+      bash -c "time sleep {{amount}}"
+
+    capture:
+      - type: matches
+        name: real_time
+        pattern: "real"
+        lambda: >
+          lambda x:  (
+          float(x.split("m")[0].split("\t")[1]) * 60
+          +
+          float(x.split("m")[1].split("s")[0])
+          )
+
+    plot:
+      - title: Real Time vs Sleep arg
+        x_axis: amount
+        y_axis: real_time
+        group_by: amount
+
+      - title: Measure Time vs sleep arg
+        x_axis: amount
+        y_axis: time
+        group_by: amount
+
+benchmarks:
+  sleep:
+    amount: [1, 2]

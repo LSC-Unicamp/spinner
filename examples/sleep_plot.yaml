@@ -1,0 +1,24 @@
+metadata:
+  description: Sleep check
+  version: "1.0"
+  runs: 2
+  timeout: 5
+  retry: 1
+  envvars: []
+
+applications:
+  sleep_test:
+    command: >
+        sleep {{amount}} && printf "I slept {{amount}}"
+
+    plot:
+    - title: Real Time vs Sleep arg
+      x_axis: amount
+      y_axis: time
+      group_by: amount
+
+benchmarks:
+  sleep_test:
+    amount:
+      - 1
+      - 2

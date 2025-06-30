@@ -1,0 +1,18 @@
+metadata:
+  description: Timeout test
+  version: "1.0"
+  runs: 1
+  timeout: 5
+  retry: False
+  envvars: ["PATH"]
+
+applications:
+  sleep_test:
+    command: >
+      sleep {{sleep_amount}} && printf "I slept {{sleep_amount}} # this may not print due to timeout!"
+
+benchmarks:
+  sleep_test:
+    sleep_amount:
+      - 1
+      - 200
