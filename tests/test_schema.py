@@ -1,7 +1,23 @@
 import pytest
 from pydantic import ValidationError
 
-from spinner.schema import SpinnerBenchmark, SpinnerMetadata
+from spinner.schema import SpinnerBenchmark, SpinnerMetadata, SpinnerCheckpoint
+
+# TEST: checkpoint ---------------------------------------------------------------------
+
+@pytest.fixture
+def checkpoint():
+    return {
+        "enabled": True,
+        "frequency": "iteration",
+        "path": "~/tmp",
+        "filename": "{benchmark}_{run}_{timestamp}",
+        "overwrite": False
+    }
+
+def test_checkpoint_valid(checkpoint):
+    """This test should always pass."""
+    SpinnerCheckpoint(**checkpoint)
 
 # TEST: metadata -----------------------------------------------------------------------
 
@@ -15,6 +31,7 @@ def metadata():
         "timeout": 5,
         "retry": True,
         "retry_limit": 1,
+        "checkpoint": False,
     }
 
 
@@ -162,3 +179,26 @@ def test_benchmark_zip_with_extra():
     images = {c["image"] for c in combos}
     assert images == {"a", "b"}
     assert bench.num_jobs == 4
+
+# TEST: metadata.checkpoint ------------------------------------------------------------
+
+@pytest.fixture
+def metadata_no_checkpoint(metadata):
+    metadata.pop("checkpoint")
+    return metadata
+
+# @pytest.fixture
+# def metadata_invalid_checkpoint(metadata):
+#     metadata['checkpoint'] = None
+#     return metadata
+
+@pytest.fixture
+def metadata_checkpoint_object(metadata, checkpoint):
+    metadata["checkpoint"] = checkpoint
+    return metadata
+
+def test_metadata_checkpoint_missing(metadata_no_checkpoint):
+    SpinnerMetadata(**metadata_no_checkpoint)
+
+def test_metadata_checkpoint_object(metadata_checkpoint_object):
+    SpinnerMetadata(**metadata_checkpoint_object)

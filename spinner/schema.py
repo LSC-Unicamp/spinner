@@ -7,6 +7,8 @@ import os
 import re
 from functools import cached_property
 from typing import Annotated, Any, Literal, Self
+from pathlib import Path
+from datetime import datetime
 
 import yaml
 from jinja2 import Environment, Template, meta
@@ -40,6 +42,18 @@ _LocationMessagePair = tuple[tuple[int | str, ...], str]
 # MODELS
 # ==============================================================================
 
+class SpinnerCheckpoint(BaseModel):
+    """The checkpoint option in the metadata config"""
+
+    enabled: bool = False
+    frequency: Literal["benchmark", "run", "iteration"] = "run"
+    path: Path = Field(default=Path("/tmp"))
+    filename: str = Field(default="{benchmark}_{timestamp}")
+    overwrite: bool = False
+
+    def resolve_filename(self, benchmark: str, **kwargs) -> str:
+        now = datetime.now().strftime("%Y%m%d_%H%M%S")
+        return self.filename.format(benchmark=benchmark, timestamp=now, **kwargs)
 
 class SpinnerMetadata(BaseModel):
     """The metadata section of the config."""
@@ -52,6 +66,7 @@ class SpinnerMetadata(BaseModel):
     envvars: list[str] | str = Field(default_factory=list)
     success_on_return: list[int] | None = None
     fail_on_return: list[int] | None = None
+    checkpoint: bool | SpinnerCheckpoint = False
 
     @field_validator("retry", mode="before")
     def validate_retry(cls, retry: int | bool) -> int:
@@ -66,6 +81,14 @@ class SpinnerMetadata(BaseModel):
                 "Expected list with var names or '*' for capturing everything"
             )
         return envvars
+
+    @field_validator("checkpoint", mode="after")
+    def validate_checkpoint(cls, checkpoint: bool | SpinnerCheckpoint):
+        if isinstance(checkpoint, bool):
+            if checkpoint is True:
+                checkpoint = SpinnerCheckpoint(enabled=True)
+            checkpoint = SpinnerCheckpoint()
+        return checkpoint
 
     @model_validator(mode="after")
     def validate_returns(self) -> Self:
