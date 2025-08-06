@@ -112,7 +112,7 @@ system_prompt = (
 )
 
 ollama_model = OpenAIModel(
-    model_name='qwen2.5-coder:32b',
+    model_name='qwen2.5-coder:14b',
     provider=OpenAIProvider(base_url='http://enqii.lsc.ic.unicamp.br:11434/v1')
 )
 agent = Agent(

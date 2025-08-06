@@ -10,4 +10,6 @@ def run(*args, **kwargs):
     return run_reporter(*args, **kwargs)
 
 
-__all__ = ["run"]
+from .ai_exporter import run_ai_exporter as run_ai
+
+__all__ = ["run", "run_ai"]

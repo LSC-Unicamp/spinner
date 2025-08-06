@@ -73,7 +73,10 @@ def export(app, input) -> None:
     path = importlib.resources.files("spinner.exporter") / "reporter.ipynb"
     try:
         exporter = importlib.import_module("spinner.exporter")
-        exporter.run(path, pkl_db_path=os.path.abspath(input.name))
+        # exporter.run(path, pkl_db_path=os.path.abspath(input.name))
+        figure_path = importlib.resources.files("spinner.exporter") / f"{input.name.split('.')[0]}.pdf"
+        spinner_pkl = importlib.resources.files("spinner.exporter") / os.path.abspath(input.name)
+        exporter.run_ai(spinner_pkl_path=spinner_pkl, figure_path=figure_path)
     except (ImportError, RuntimeError) as error:
         app.print(
             "[b red]ERROR[/]: Export requires optional Jupyter dependencies.\n"
