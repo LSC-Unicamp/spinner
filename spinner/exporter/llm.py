@@ -15,6 +15,8 @@ import pandas as pd
 import numpy as np
 import rich
 
+import vl_convert as vlc
+
 # class CityLocation(BaseModel):
 #     city: str
 #     country: str
@@ -54,13 +56,7 @@ def process_df(all_df):
         all_df['devices'] = 10
     all_df['sched'] = all_df['version'].apply(lambda x: 'sched' if 'sched' in x else 'no')
     all_df['impl'] = all_df['version'].apply(lambda x: 'mpich' if 'mpich' in x else 'ompi')
-    if 'hht' in all_df.columns:
-        # all_df['hht'] = all_df['hht'].fillna(10)
-        # all_df['hht'] = all_df['hht'].astype(int)
-        # all_df['hht'] =  all_df['hht'].apply(lambda x: x if type(x) != np.nan else 10)
-        all_df['hht'] = 10
-    else:
-        all_df['hht'] = 10
+    all_df['hht'] = 10
     if 'radix' not in all_df.columns:
         all_df['radix'] = 5
     all_df.drop(columns=['name', 'kernel',  'hosts', 'time'], inplace=True)
@@ -101,7 +97,7 @@ class VegaLiteSpec(BaseModel):
     data: Dict[Literal["values"], List[dict]]
 
 # Prepare the data as dicts for VegaLite
-df_filtered = agg_all_df[['config', 'devices', 'runtime_mean']].query('devices % 2 == 0')
+df_filtered = agg_all_df.query('size == 20 & output == 16')[['config', 'devices', 'runtime_mean']]
 
 data_values = df_filtered.to_markdown(index=False)
 
@@ -110,13 +106,13 @@ print("DataFrame Preview:")
 print(df_filtered.head())
 
 system_prompt = (
-    "You are a data analyst. Generate only a valid VegaLite v5 JSON spec that plots the data passed to you. "
+    "You are a VegaLite expert that write Vega Lite JSONs. "
     "Do not include explanations or extra text. Use the schema 'https://vega.github.io/schema/vega-lite/v5.json'. "
     "Assume the data and coluns described by the user are in the user-provided dataset."
 )
 
 ollama_model = OpenAIModel(
-    model_name='qwen3:32b',
+    model_name='qwen2.5-coder:32b',
     provider=OpenAIProvider(base_url='http://enqii.lsc.ic.unicamp.br:11434/v1')
 )
 agent = Agent(
@@ -130,15 +126,16 @@ agent = Agent(
 
 # Instruction: what kind of chart do you want?
 # instruction = "Plot a bar chart showing average salary per department"
+    # "\nYou also need to pass the data in the json file using the \"data\" field of vega-lite, the vega-lite compiler does not have it"
 instruction = (
-    "Plot a lineplot showing the runtime_mean (y) per devices (x) using the config as a hue. "
-    "Please, use only the values in the markdown dataset."
-    "the dataset is the following:\n"
+    "Write a vega-lite V5 JSON that plots a lineplot showing the runtime_mean (y) per devices (x) using the config as a hue.\n"
+    "please use the colors \"green\” and \“purple\” and use markers in the lines on the plot.\n"
+    "Please, use only the values in the markdown dataset.\n"
+    "Please, replace the config values in the  \"data\" field of vega-lite JSON to \"MPI-H100\" or \"MPP-H100\", and in the legend use \"Platform\" instead of \"config\".\n"
+    "The dataset is the following:\n"
     f"{data_values}"
-    "You also need to pass the data in the json file using the \"data\" field of vega-lite, the vega-lite compiler does not have it"
 )
-# print(data_values)
-# print(system_prompt)
+
 
 # Run the agent
 response = agent.run_sync(
@@ -146,9 +143,13 @@ response = agent.run_sync(
 )
 
 # Print and save result
-rich.print("VegaLite Spec:")
-rich.print(json.dumps(response.output.model_dump(), indent=2))
+# rich.print("VegaLite Spec:")
+# rich.print(json.dumps(response.output.model_dump(), indent=2))
 
 # Optionally save to file
 with open("chart.json", "w") as f:
     json.dump(response.output.model_dump(), f, indent=2)
+
+pdf_data = vlc.vegalite_to_pdf(vl_spec=response.output.model_dump())
+with open("chart.pdf", "wb") as f:
+    f.write(pdf_data)
