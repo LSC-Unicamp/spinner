@@ -106,3 +106,15 @@ def test_run_single_benchmark_with_benchmark_flag(tmp_path):
     run(SpinnerApp.get(), config, output.open("wb"), benchmark="bench_1")
     data = pickle.loads(output.read_bytes())
     assert data["dataframe"]["name"].tolist() == ["a1"]
+
+
+def test_run_docs_multi_app_example(tmp_path):
+    path = Path("docs/examples/multi_app_benchmark.yaml")
+    config = SpinnerConfig.from_data(yaml.safe_load(path.read_text()))
+    output = tmp_path / "out.pkl"
+
+    run(SpinnerApp.get(), config, output.open("wb"), benchmark="bench_1")
+
+    data = pickle.loads(output.read_bytes())
+    names = sorted(data["dataframe"]["name"].tolist())
+    assert names == ["echo_cmd", "sleep_cmd"]

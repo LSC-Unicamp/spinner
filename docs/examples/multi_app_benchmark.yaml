@@ -4,16 +4,15 @@ metadata:
   runs: 1
 
 applications:
-  app_a:
+  sleep_cmd:
     command: >
-      echo "app_a size={{ size }} radix={{ radix }}"
+      sleep {{ delay }}
 
-  app_b:
+  echo_cmd:
     command: >
-      echo "app_b size={{ size }} radix={{ radix }}"
+      echo "delay={{ delay }}"
 
 benchmarks:
   bench_1:
-    apps: [app_a, app_b]
-    size: [20]
-    radix: [1, 2, 3, 4]
+    apps: [sleep_cmd, echo_cmd]
+    delay: [0]

@@ -151,9 +151,8 @@ You can also define a benchmark name that targets one or many applications:
 ```yaml
 benchmarks:
   bench_1:
-    apps: [app_a, app_b]
-    radix: [1, 2, 3, 4]
-    output: [16]
+    apps: [sleep_cmd, echo_cmd]
+    delay: [0, 1]
 ```
 
 If `apps` is omitted, Spinner keeps the original behavior and uses the benchmark name as the application name.

@@ -113,7 +113,8 @@ sweep runs for more than one application template.
 spinner run docs/examples/multi_app_benchmark.yaml -b bench_1 -o bench_1.pkl
 ```
 
-This runs each `radix` value for both `app_a` and `app_b`.
+This runs the same `delay` parameter for both `sleep_cmd` and `echo_cmd`,
+using only commands available in a default environment.
 
 ## 8. Zipping Parameters
 
