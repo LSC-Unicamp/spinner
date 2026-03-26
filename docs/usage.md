@@ -56,7 +56,7 @@ benchmarks:
 |-------|---------|------------|
 | **`metadata`** | Global run policy | `description`, `version`, `runs`, `timeout`, `retry`, `envvars`, `success_on_return`, `fail_on_return` |
 | **`applications`** | How to run each binary/script **and** how to scrape its output | `command`, `capture`, `plot` |
-| **`benchmarks`** | Parameter sweep matrix | `<benchmark_name>: <param_list>` (+ optional `app`) |
+| **`benchmarks`** | Parameter sweep matrix | `<benchmark_name>: <param_list>` (+ optional `app`/`apps`) |
 
 #### metadata
 
@@ -151,12 +151,12 @@ You can also define a benchmark name that targets one or many applications:
 ```yaml
 benchmarks:
   bench_1:
-    app: [app_a, app_b]
+    apps: [app_a, app_b]
     radix: [1, 2, 3, 4]
     output: [16]
 ```
 
-If `app` is omitted, Spinner keeps the original behavior and uses the benchmark name as the application name.
+If `app`/`apps` is omitted, Spinner keeps the original behavior and uses the benchmark name as the application name.
 
 ---
 

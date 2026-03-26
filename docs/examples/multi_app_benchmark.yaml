@@ -14,6 +14,6 @@ applications:
 
 benchmarks:
   bench_1:
-    app: [app_a, app_b]
+    apps: [app_a, app_b]
     size: [20]
     radix: [1, 2, 3, 4]

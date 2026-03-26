@@ -76,7 +76,7 @@ def test_run_benchmark_with_multiple_applications(tmp_path):
             },
             "benchmarks": {
                 "grouped": {
-                    "app": ["a1", "a2"],
+                    "apps": ["a1", "a2"],
                     "value": [1],
                 }
             },
@@ -97,8 +97,8 @@ def test_run_single_benchmark_with_benchmark_flag(tmp_path):
                 "a2": {"command": "echo run"},
             },
             "benchmarks": {
-                "bench_1": {"app": ["a1"], "value": [1]},
-                "bench_2": {"app": ["a2"], "value": [2]},
+                "bench_1": {"apps": ["a1"], "value": [1]},
+                "bench_2": {"apps": ["a2"], "value": [2]},
             },
         }
     )

@@ -171,6 +171,19 @@ def test_benchmark_application_names():
     assert bench.num_jobs == 2
 
 
+def test_benchmark_application_names_apps_alias():
+    bench = SpinnerBenchmark({"apps": ["a", "b"], "size": [1, 2]})
+    assert bench.application_names("fallback") == ["a", "b"]
+    assert bench.parameters == {"size"}
+    assert bench.num_jobs == 2
+
+
+def test_benchmark_application_names_rejects_app_and_apps():
+    bench = SpinnerBenchmark({"app": ["a"], "apps": ["b"], "size": [1]})
+    with pytest.raises(ValueError):
+        bench.application_names("fallback")
+
+
 def test_benchmark_num_jobs_with_zip_and_app():
     bench = SpinnerBenchmark(
         {"app": ["a1", "a2"], "x": [1, 2], "y": [3, 4], "zip": ["x", "y"]}

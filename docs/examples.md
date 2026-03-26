@@ -100,7 +100,7 @@ Spinner will attempt to run both `sleep_amount` values; the 200-second sleep wil
 
 ## 7. One Benchmark, Multiple Applications
 
-Demonstrates using a benchmark group with an `app` list so the same parameter
+Demonstrates using a benchmark group with an `apps` list so the same parameter
 sweep runs for more than one application template.
 
 ```yaml

@@ -45,7 +45,7 @@ applications:
     command: echo run
 benchmarks:
   bench_1:
-    app: [app1]
+    apps: [app1]
     x: [1]
 """
         )

@@ -267,7 +267,11 @@ class SpinnerBenchmark(RootModel):
 
     @property
     def application(self) -> list[str] | str | None:
-        return self.root.get("app")
+        app = self.root.get("app")
+        apps = self.root.get("apps")
+        if app is not None and apps is not None:
+            raise ValueError("use either 'app' or 'apps', not both")
+        return app if app is not None else apps
 
     def application_names(self, fallback: str) -> list[str]:
         app = self.application
@@ -283,15 +287,15 @@ class SpinnerBenchmark(RootModel):
 
     @cached_property
     def parameters(self) -> set[str]:
-        return set(k for k in self.root.keys() if k not in {"zip", "app"})
+        return set(k for k in self.root.keys() if k not in {"zip", "app", "apps"})
 
     @property
     def keys(self) -> list[str]:
-        return [k for k in self.root.keys() if k not in {"zip", "app"}]
+        return [k for k in self.root.keys() if k not in {"zip", "app", "apps"}]
 
     @property
     def values(self) -> list[Any]:
-        return [v for k, v in self.root.items() if k not in {"zip", "app"}]
+        return [v for k, v in self.root.items() if k not in {"zip", "app", "apps"}]
 
     @cached_property
     def num_jobs(self) -> int:
@@ -304,10 +308,12 @@ class SpinnerBenchmark(RootModel):
             other = math.prod(
                 len(v)
                 for k, v in self.root.items()
-                if k not in {*zip_keys, "zip", "app"}
+                if k not in {*zip_keys, "zip", "app", "apps"}
             )
             return zipped_len * other
-        return math.prod(len(v) for k, v in self.root.items() if k not in {"zip", "app"})
+        return math.prod(
+            len(v) for k, v in self.root.items() if k not in {"zip", "app", "apps"}
+        )
 
     def sweep_parameters(
         self, extra: dict[str, Any] | None = None
