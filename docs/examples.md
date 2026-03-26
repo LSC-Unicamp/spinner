@@ -98,7 +98,24 @@ spinner run docs/examples/timeout_test.yaml
 
 Spinner will attempt to run both `sleep_amount` values; the 200-second sleep will hit the 5-second timeout.
 
-## 5. Zipping Parameters
+## 7. One Benchmark, Multiple Applications
+
+Demonstrates using a benchmark group with an `app` list so the same parameter
+sweep runs for more than one application template.
+
+```yaml
+--8<-- "./docs/examples/multi_app_benchmark.yaml"
+```
+
+**How to run**:
+
+```bash
+spinner run docs/examples/multi_app_benchmark.yaml -o grouped.pkl
+```
+
+This runs each `radix` value for both `mpi_openmp` and `mpp`.
+
+## 8. Zipping Parameters
 
 Sometimes you want two parameters to vary together rather than producing all
 possible combinations. Add a `zip` key under your benchmark to pair parameter

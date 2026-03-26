@@ -55,7 +55,7 @@ benchmarks:
 |-------|---------|------------|
 | **`metadata`** | Global run policy | `description`, `version`, `runs`, `timeout`, `retry`, `envvars`, `success_on_return`, `fail_on_return` |
 | **`applications`** | How to run each binary/script **and** how to scrape its output | `command`, `capture`, `plot` |
-| **`benchmarks`** | Parameter sweep matrix | `<application_name>: <param_list>` |
+| **`benchmarks`** | Parameter sweep matrix | `<benchmark_name>: <param_list>` (+ optional `app`) |
 
 #### metadata
 
@@ -144,6 +144,18 @@ benchmarks:
 ```
 
 Spinner builds the Cartesian product of every parameter list. Two params with three values each will produce six runs.
+
+You can also define a benchmark name that targets one or many applications:
+
+```yaml
+benchmarks:
+  deps_impact:
+    app: [mpi_openmp, mpp]
+    radix: [1, 2, 3, 4]
+    output: [16]
+```
+
+If `app` is omitted, Spinner keeps the original behavior and uses the benchmark name as the application name.
 
 ---
 

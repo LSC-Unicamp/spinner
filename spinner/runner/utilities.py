@@ -33,17 +33,19 @@ def run_benchmarks(app: SpinnerApp, config: SpinnerConfig, output: BinaryIO, **e
 
     # Loop through all benchmarks, executing one by one.
     with RunnerProgress(app, config) as progress:
-        for name, bench in config.benchmarks.items():
-            runner = InstanceRunner(
-                app,
-                config,
-                name=name,
-                benchmark=bench,
-                dataframe=df,
-                progress=progress,
-                extra_args=extra,
-            )
-            runner.run()
+        for benchmark_name, benchmark in config.benchmarks.items():
+            for application_name in benchmark.application_names(benchmark_name):
+                runner = InstanceRunner(
+                    app,
+                    config,
+                    benchmark_name=benchmark_name,
+                    application_name=application_name,
+                    benchmark=benchmark,
+                    dataframe=df,
+                    progress=progress,
+                    extra_args=extra,
+                )
+                runner.run()
 
     app.print(df)
 

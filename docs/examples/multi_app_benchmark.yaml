@@ -1,0 +1,19 @@
+metadata:
+  description: Benchmark group that fans out to multiple applications
+  version: "1.0"
+  runs: 1
+
+applications:
+  mpi_openmp:
+    command: >
+      echo "mpi_openmp size={{ size }} radix={{ radix }}"
+
+  mpp:
+    command: >
+      echo "mpp size={{ size }} radix={{ radix }}"
+
+benchmarks:
+  deps_impact:
+    app: [mpi_openmp, mpp]
+    size: [20]
+    radix: [1, 2, 3, 4]
