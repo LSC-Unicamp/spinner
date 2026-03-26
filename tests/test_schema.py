@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from spinner.schema import SpinnerBenchmark, SpinnerMetadata
+from spinner.schema import SpinnerBenchmark, SpinnerConfig, SpinnerMetadata
 
 # TEST: metadata -----------------------------------------------------------------------
 
@@ -162,3 +162,67 @@ def test_benchmark_zip_with_extra():
     images = {c["image"] for c in combos}
     assert images == {"a", "b"}
     assert bench.num_jobs == 4
+
+
+def test_benchmark_application_names():
+    bench = SpinnerBenchmark({"apps": ["a", "b"], "size": [1, 2]})
+    assert bench.application_names("fallback") == ["a", "b"]
+    assert bench.parameters == {"size"}
+    assert bench.num_jobs == 2
+
+
+def test_benchmark_application_names_apps_alias():
+    bench = SpinnerBenchmark({"apps": "a", "size": [1, 2]})
+    assert bench.application_names("fallback") == ["a"]
+
+
+def test_benchmark_application_names_rejects_app():
+    bench = SpinnerBenchmark({"app": ["a"], "size": [1]})
+    with pytest.raises(ValueError):
+        bench.application_names("fallback")
+
+
+def test_benchmark_num_jobs_with_zip_and_app():
+    bench = SpinnerBenchmark(
+        {"apps": ["a1", "a2"], "x": [1, 2], "y": [3, 4], "zip": ["x", "y"]}
+    )
+    assert bench.num_jobs == 2
+
+
+def test_config_supports_custom_benchmark_name_with_app_list():
+    config = SpinnerConfig.from_data(
+        {
+            "metadata": {"description": "x", "version": "1.0", "runs": 2},
+            "applications": {
+                "mpi_openmp": {"command": "echo {{ value }}"},
+                "mpp": {"command": "echo {{ value }}"},
+            },
+            "benchmarks": {
+                    "deps_impact": {
+                        "apps": ["mpi_openmp", "mpp"],
+                        "value": [1, 2, 3],
+                    }
+                },
+        }
+    )
+
+    # 3 parameter combinations * 2 applications * 2 runs
+    assert config.num_jobs == 12
+
+
+def test_config_invalid_app_value_reports_validation_error():
+    with pytest.raises(ValidationError):
+        SpinnerConfig.from_data(
+            {
+                "metadata": {"description": "x", "version": "1.0", "runs": 1},
+                "applications": {
+                    "mpi_openmp": {"command": "echo {{ value }}"},
+                },
+                "benchmarks": {
+                    "deps_impact": {
+                        "apps": [],
+                        "value": [1],
+                    }
+                },
+            }
+        )

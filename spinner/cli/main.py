@@ -50,8 +50,9 @@ def cli(ctx, verbose) -> None:
 @pass_obj
 @arg("CONFIG", type=File("r"))
 @opt("--output", "-o", default="benchdata.pkl", type=File("wb"))
+@opt("--benchmark", "-b", default=None, help="Run only one benchmark block by name.")
 @opt("--extra-args", "-e", type=ExtraArgs())
-def run(app, config, output, extra_args) -> None:
+def run(app, config, output, benchmark, extra_args) -> None:
     """Run benchmark from configuration file."""
     try:
         config = SpinnerConfig.from_stream(config)
@@ -59,10 +60,14 @@ def run(app, config, output, extra_args) -> None:
         _print_errors(app, errors)
         raise SystemExit(1)
 
+    if benchmark and config.benchmarks[benchmark] is None:
+        app.print(f"[b red]ERROR[/]: Benchmark {benchmark!r} is undefined.")
+        raise SystemExit(1)
+
     if not extra_args:
         extra_args = {}
 
-    spinner.runner.run(app, config, output, **extra_args)
+    spinner.runner.run(app, config, output, benchmark=benchmark, **extra_args)
 
 
 @cli.command()

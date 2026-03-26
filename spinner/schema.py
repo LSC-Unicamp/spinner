@@ -254,28 +254,46 @@ class SpinnerApplications(RootModel):
 
 
 class SpinnerBenchmark(RootModel):
-    root: dict[str, list[Any]] = Field(default_factory=dict)
+    root: dict[str, Any] = Field(default_factory=dict)
 
     def __iter__(self):
         return iter(self.root)
 
-    def __getitem__(self, key) -> list[Any] | None:
+    def __getitem__(self, key) -> Any | None:
         return self.root.get(key)
 
     def items(self):
         return self.root.items()
 
+    @property
+    def application(self) -> list[str] | str | None:
+        if "app" in self.root:
+            raise ValueError("use 'apps' (plural) instead of 'app'")
+        return self.root.get("apps")
+
+    def application_names(self, fallback: str) -> list[str]:
+        app = self.application
+        if app is None:
+            return [fallback]
+        if isinstance(app, str):
+            return [app]
+        if isinstance(app, list) and app and all(isinstance(x, str) for x in app):
+            return app
+        raise ValueError(
+            "apps must be a string or a non-empty list of strings"
+        )
+
     @cached_property
     def parameters(self) -> set[str]:
-        return set(k for k in self.root.keys() if k != "zip")
+        return set(k for k in self.root.keys() if k not in {"zip", "apps"})
 
     @property
     def keys(self) -> list[str]:
-        return [k for k in self.root.keys() if k != "zip"]
+        return [k for k in self.root.keys() if k not in {"zip", "apps"}]
 
     @property
-    def values(self) -> list[str]:
-        return [v for k, v in self.root.items() if k != "zip"]
+    def values(self) -> list[Any]:
+        return [v for k, v in self.root.items() if k not in {"zip", "apps"}]
 
     @cached_property
     def num_jobs(self) -> int:
@@ -286,10 +304,14 @@ class SpinnerBenchmark(RootModel):
                 if len(self.root[key]) != zipped_len:
                     raise ValueError("zipped parameters must have the same length")
             other = math.prod(
-                len(v) for k, v in self.root.items() if k not in {*zip_keys, "zip"}
+                len(v)
+                for k, v in self.root.items()
+                if k not in {*zip_keys, "zip", "apps"}
             )
             return zipped_len * other
-        return math.prod(len(v) for k, v in self.root.items() if k != "zip")
+        return math.prod(
+            len(v) for k, v in self.root.items() if k not in {"zip", "apps"}
+        )
 
     def sweep_parameters(
         self, extra: dict[str, Any] | None = None
@@ -340,7 +362,7 @@ class SpinnerBenchmarks(RootModel):
     def __iter__(self):
         return iter(self.root)
 
-    def __getitem__(self, key) -> SpinnerApplication | None:
+    def __getitem__(self, key) -> SpinnerBenchmark | None:
         return self.root.get(key)
 
     def __len__(self) -> int:
@@ -380,32 +402,49 @@ class SpinnerConfig(BaseModel):
     def validate_benchmark_keys(self) -> _LocationMessagePair:
         errors = []
 
-        benchmarks = set(self.benchmarks)
         applications = set(self.applications)
 
-        if difference := benchmarks - applications:
-            for benchmark in difference:
-                errors.append(
-                    (("benchmarks", benchmark), f"benchmark {benchmark!r} is undefined")
-                )
+        for benchmark_name, benchmark in self.benchmarks.items():
+            try:
+                benchmark_applications = benchmark.application_names(benchmark_name)
+            except ValueError as error:
+                errors.append((("benchmarks", benchmark_name, "apps"), str(error)))
+                continue
+
+            if difference := set(benchmark_applications) - applications:
+                for application in difference:
+                    errors.append(
+                        (
+                            ("benchmarks", benchmark_name, "apps"),
+                            f"application {application!r} is undefined",
+                        )
+                    )
 
         return errors
 
     def validate_application_placeholders(self) -> _LocationMessagePair:
         errors = []
 
-        for name, application in self.applications.items():
-            placeholders = application.command.placeholders
-            if name not in self.benchmarks:
-                # TODO: Issue a warning when the application has no corresponding
-                # benchmark.
+        for benchmark_name, benchmark in self.benchmarks.items():
+            try:
+                application_names = benchmark.application_names(benchmark_name)
+            except ValueError:
+                # Keep the validation error centralized in `validate_benchmark_keys`.
                 continue
 
-            # Which placeholders that are *not* in the benchmark parameters
-            if difference := placeholders - self.benchmarks[name].parameters:
-                app = SpinnerApp.get()
-                for var in difference:
-                    app.info(f"Variable {var!r} not in benchmark parameters.")
+            for application_name in application_names:
+                application = self.applications[application_name]
+                placeholders = application.command.placeholders
+                # Which placeholders that are *not* in the benchmark parameters
+                if difference := placeholders - benchmark.parameters:
+                    app = SpinnerApp.get()
+                    for var in difference:
+                        app.info(
+                            "Variable "
+                            f"{var!r} not in benchmark parameters "
+                            f"for benchmark {benchmark_name!r} and application "
+                            f"{application_name!r}."
+                        )
 
         return errors
 
@@ -431,4 +470,9 @@ class SpinnerConfig(BaseModel):
 
     @cached_property
     def num_jobs(self) -> int:
-        return self.metadata.runs * self.benchmarks.num_jobs
+        jobs = 0
+        for benchmark_name, benchmark in self.benchmarks.items():
+            jobs += benchmark.num_jobs * len(
+                benchmark.application_names(benchmark_name)
+            )
+        return self.metadata.runs * jobs

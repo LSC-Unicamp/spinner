@@ -18,6 +18,7 @@ spinner run path/to/benchmark.yaml -o output.pkl
 ```
 
 `-o / --output` names the Pickle you’ll feed to **spinner export**.
+Use `-b / --benchmark <name>` to run only one benchmark block from a larger YAML file.
 Use `-v` or `-vv` to show the executed commands and, at the highest level,
 their outputs and return codes. When a verbosity flag is used, the logger level
 becomes `INFO`; otherwise it falls back to the `LOGLEVEL` environment variable
@@ -55,7 +56,7 @@ benchmarks:
 |-------|---------|------------|
 | **`metadata`** | Global run policy | `description`, `version`, `runs`, `timeout`, `retry`, `envvars`, `success_on_return`, `fail_on_return` |
 | **`applications`** | How to run each binary/script **and** how to scrape its output | `command`, `capture`, `plot` |
-| **`benchmarks`** | Parameter sweep matrix | `<application_name>: <param_list>` |
+| **`benchmarks`** | Parameter sweep matrix | `<benchmark_name>: <param_list>` (+ optional `apps`) |
 
 #### metadata
 
@@ -144,6 +145,17 @@ benchmarks:
 ```
 
 Spinner builds the Cartesian product of every parameter list. Two params with three values each will produce six runs.
+
+You can also define a benchmark name that targets one or many applications:
+
+```yaml
+benchmarks:
+  bench_1:
+    apps: [sleep_cmd, echo_cmd]
+    delay: [0, 1]
+```
+
+If `apps` is omitted, Spinner keeps the original behavior and uses the benchmark name as the application name.
 
 ---
 

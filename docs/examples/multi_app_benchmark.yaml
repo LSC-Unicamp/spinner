@@ -1,0 +1,18 @@
+metadata:
+  description: Benchmark group that fans out to multiple applications
+  version: "1.0"
+  runs: 1
+
+applications:
+  sleep_cmd:
+    command: >
+      sleep {{ delay }}
+
+  echo_cmd:
+    command: >
+      echo "delay={{ delay }}"
+
+benchmarks:
+  bench_1:
+    apps: [sleep_cmd, echo_cmd]
+    delay: [0]

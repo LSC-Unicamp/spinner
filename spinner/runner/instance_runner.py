@@ -27,7 +27,8 @@ class InstanceRunner:
 
     app: SpinnerApp
     config: SpinnerConfig
-    name: str
+    benchmark_name: str
+    application_name: str
     benchmark: SpinnerBenchmark
     dataframe: pd.DataFrame
     application: SpinnerApplication
@@ -38,7 +39,8 @@ class InstanceRunner:
         app: SpinnerApp,
         config: SpinnerConfig,
         *,
-        name: str,
+        benchmark_name: str,
+        application_name: str,
         benchmark: SpinnerBenchmark,
         dataframe: pd.DataFrame,
         progress: RunnerProgress,
@@ -46,11 +48,12 @@ class InstanceRunner:
     ) -> None:
         self.app = app
         self.config = config
-        self.name = name
+        self.benchmark_name = benchmark_name
+        self.application_name = application_name
         self.benchmark = benchmark
         self.dataframe = dataframe
         self.progress = progress
-        self.application = config.applications[name]
+        self.application = config.applications[application_name]
         self.environment = Environment(undefined=StrictUndefined)
         self.extra_args = extra_args
 
@@ -67,7 +70,7 @@ class InstanceRunner:
         try:
             command = self.application.render(self.environment, **parameters)
         except UndefinedError as e:
-            self.app.fatal(f"Application {self.name}: {e}.")
+            self.app.fatal(f"Application {self.application_name}: {e}.")
             return
 
         # Run the command once, for each run.
@@ -103,7 +106,7 @@ class InstanceRunner:
         captures = self.process_captures(output)
 
         self.dataframe.loc[len(self.dataframe)] = {
-            "name": self.name,
+            "name": self.application_name,
             **parameters,
             **captures,
             "time": elapsed,
