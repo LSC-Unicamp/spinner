@@ -4,16 +4,16 @@ metadata:
   runs: 1
 
 applications:
-  mpi_openmp:
+  app_a:
     command: >
-      echo "mpi_openmp size={{ size }} radix={{ radix }}"
+      echo "app_a size={{ size }} radix={{ radix }}"
 
-  mpp:
+  app_b:
     command: >
-      echo "mpp size={{ size }} radix={{ radix }}"
+      echo "app_b size={{ size }} radix={{ radix }}"
 
 benchmarks:
-  deps_impact:
-    app: [mpi_openmp, mpp]
+  bench_1:
+    app: [app_a, app_b]
     size: [20]
     radix: [1, 2, 3, 4]

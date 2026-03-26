@@ -110,10 +110,10 @@ sweep runs for more than one application template.
 **How to run**:
 
 ```bash
-spinner run docs/examples/multi_app_benchmark.yaml -o grouped.pkl
+spinner run docs/examples/multi_app_benchmark.yaml -b bench_1 -o bench_1.pkl
 ```
 
-This runs each `radix` value for both `mpi_openmp` and `mpp`.
+This runs each `radix` value for both `app_a` and `app_b`.
 
 ## 8. Zipping Parameters
 

@@ -86,3 +86,23 @@ def test_run_benchmark_with_multiple_applications(tmp_path):
     run(SpinnerApp.get(), config, output.open("wb"))
     data = pickle.loads(output.read_bytes())
     assert sorted(data["dataframe"]["name"].tolist()) == ["a1", "a2"]
+
+
+def test_run_single_benchmark_with_benchmark_flag(tmp_path):
+    config = SpinnerConfig.from_data(
+        {
+            "metadata": {"description": "x", "version": "1.0", "runs": 1},
+            "applications": {
+                "a1": {"command": "echo run"},
+                "a2": {"command": "echo run"},
+            },
+            "benchmarks": {
+                "bench_1": {"app": ["a1"], "value": [1]},
+                "bench_2": {"app": ["a2"], "value": [2]},
+            },
+        }
+    )
+    output = tmp_path / "out.pkl"
+    run(SpinnerApp.get(), config, output.open("wb"), benchmark="bench_1")
+    data = pickle.loads(output.read_bytes())
+    assert data["dataframe"]["name"].tolist() == ["a1"]

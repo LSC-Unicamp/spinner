@@ -14,7 +14,13 @@ from spinner.schema import SpinnerConfig
 # ==============================================================================
 
 
-def run_benchmarks(app: SpinnerApp, config: SpinnerConfig, output: BinaryIO, **extra):
+def run_benchmarks(
+    app: SpinnerApp,
+    config: SpinnerConfig,
+    output: BinaryIO,
+    benchmark: str | None = None,
+    **extra,
+):
     """
     Generate execution matrix from input configuration and run all benchmarks.
     """
@@ -32,15 +38,28 @@ def run_benchmarks(app: SpinnerApp, config: SpinnerConfig, output: BinaryIO, **e
     start_env = config.metadata.capture_environment()
 
     # Loop through all benchmarks, executing one by one.
-    with RunnerProgress(app, config) as progress:
-        for benchmark_name, benchmark in config.benchmarks.items():
-            for application_name in benchmark.application_names(benchmark_name):
+    benchmark_items = list(config.benchmarks.items())
+    total_jobs = config.num_jobs
+    if benchmark is not None:
+        selected = config.benchmarks[benchmark]
+        if selected is None:
+            raise ValueError(f"Benchmark {benchmark!r} is undefined")
+        benchmark_items = [(benchmark, selected)]
+        total_jobs = (
+            config.metadata.runs
+            * selected.num_jobs
+            * len(selected.application_names(benchmark))
+        )
+
+    with RunnerProgress(app, config, total=total_jobs) as progress:
+        for benchmark_name, benchmark_data in benchmark_items:
+            for application_name in benchmark_data.application_names(benchmark_name):
                 runner = InstanceRunner(
                     app,
                     config,
                     benchmark_name=benchmark_name,
                     application_name=application_name,
-                    benchmark=benchmark,
+                    benchmark=benchmark_data,
                     dataframe=df,
                     progress=progress,
                     extra_args=extra,

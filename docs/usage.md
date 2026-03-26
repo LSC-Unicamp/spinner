@@ -18,6 +18,7 @@ spinner run path/to/benchmark.yaml -o output.pkl
 ```
 
 `-o / --output` names the Pickle you’ll feed to **spinner export**.
+Use `-b / --benchmark <name>` to run only one benchmark block from a larger YAML file.
 Use `-v` or `-vv` to show the executed commands and, at the highest level,
 their outputs and return codes. When a verbosity flag is used, the logger level
 becomes `INFO`; otherwise it falls back to the `LOGLEVEL` environment variable
@@ -149,8 +150,8 @@ You can also define a benchmark name that targets one or many applications:
 
 ```yaml
 benchmarks:
-  deps_impact:
-    app: [mpi_openmp, mpp]
+  bench_1:
+    app: [app_a, app_b]
     radix: [1, 2, 3, 4]
     output: [16]
 ```
