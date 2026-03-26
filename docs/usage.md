@@ -56,7 +56,7 @@ benchmarks:
 |-------|---------|------------|
 | **`metadata`** | Global run policy | `description`, `version`, `runs`, `timeout`, `retry`, `envvars`, `success_on_return`, `fail_on_return` |
 | **`applications`** | How to run each binary/script **and** how to scrape its output | `command`, `capture`, `plot` |
-| **`benchmarks`** | Parameter sweep matrix | `<benchmark_name>: <param_list>` (+ optional `app`/`apps`) |
+| **`benchmarks`** | Parameter sweep matrix | `<benchmark_name>: <param_list>` (+ optional `apps`) |
 
 #### metadata
 
@@ -156,7 +156,7 @@ benchmarks:
     output: [16]
 ```
 
-If `app`/`apps` is omitted, Spinner keeps the original behavior and uses the benchmark name as the application name.
+If `apps` is omitted, Spinner keeps the original behavior and uses the benchmark name as the application name.
 
 ---
 

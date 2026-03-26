@@ -165,28 +165,26 @@ def test_benchmark_zip_with_extra():
 
 
 def test_benchmark_application_names():
-    bench = SpinnerBenchmark({"app": ["a", "b"], "size": [1, 2]})
-    assert bench.application_names("fallback") == ["a", "b"]
-    assert bench.parameters == {"size"}
-    assert bench.num_jobs == 2
-
-
-def test_benchmark_application_names_apps_alias():
     bench = SpinnerBenchmark({"apps": ["a", "b"], "size": [1, 2]})
     assert bench.application_names("fallback") == ["a", "b"]
     assert bench.parameters == {"size"}
     assert bench.num_jobs == 2
 
 
-def test_benchmark_application_names_rejects_app_and_apps():
-    bench = SpinnerBenchmark({"app": ["a"], "apps": ["b"], "size": [1]})
+def test_benchmark_application_names_apps_alias():
+    bench = SpinnerBenchmark({"apps": "a", "size": [1, 2]})
+    assert bench.application_names("fallback") == ["a"]
+
+
+def test_benchmark_application_names_rejects_app():
+    bench = SpinnerBenchmark({"app": ["a"], "size": [1]})
     with pytest.raises(ValueError):
         bench.application_names("fallback")
 
 
 def test_benchmark_num_jobs_with_zip_and_app():
     bench = SpinnerBenchmark(
-        {"app": ["a1", "a2"], "x": [1, 2], "y": [3, 4], "zip": ["x", "y"]}
+        {"apps": ["a1", "a2"], "x": [1, 2], "y": [3, 4], "zip": ["x", "y"]}
     )
     assert bench.num_jobs == 2
 
@@ -200,11 +198,11 @@ def test_config_supports_custom_benchmark_name_with_app_list():
                 "mpp": {"command": "echo {{ value }}"},
             },
             "benchmarks": {
-                "deps_impact": {
-                    "app": ["mpi_openmp", "mpp"],
-                    "value": [1, 2, 3],
-                }
-            },
+                    "deps_impact": {
+                        "apps": ["mpi_openmp", "mpp"],
+                        "value": [1, 2, 3],
+                    }
+                },
         }
     )
 
@@ -222,7 +220,7 @@ def test_config_invalid_app_value_reports_validation_error():
                 },
                 "benchmarks": {
                     "deps_impact": {
-                        "app": [],
+                        "apps": [],
                         "value": [1],
                     }
                 },
