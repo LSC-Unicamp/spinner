@@ -11,6 +11,7 @@ from pydantic import ValidationError
 import spinner
 from spinner.app import SpinnerApp
 from spinner.schema import SpinnerConfig
+from spinner.exporter.exporter import warn_missing_plot_configuration
 
 from .util import ExtraArgs
 
@@ -76,6 +77,10 @@ def run(app, config, output, benchmark, extra_args) -> None:
 def export(app, input) -> None:
     """Export benchmark data."""
     path = importlib.resources.files("spinner.exporter") / "reporter.ipynb"
+    try:
+        warn_missing_plot_configuration(app, input)
+    except Exception:
+        input.seek(0)
     try:
         exporter = importlib.import_module("spinner.exporter")
         exporter.run(path, pkl_db_path=os.path.abspath(input.name))
