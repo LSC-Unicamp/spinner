@@ -1,6 +1,5 @@
 import importlib
 import os
-import pickle
 
 from click import File
 from click import argument as arg
@@ -12,6 +11,7 @@ from pydantic import ValidationError
 import spinner
 from spinner.app import SpinnerApp
 from spinner.schema import SpinnerConfig
+from spinner.exporter.exporter import warn_missing_plot_configuration
 
 from .util import ExtraArgs
 
@@ -30,35 +30,6 @@ def _print_errors(app: SpinnerApp, exception: ValidationError) -> None:
         app.print(f"\n{i:3}. Error in [i]{path!r}[/]\n     [dim]{message}[/]")
 
     app.print("\nPlease fix the above errors and try again.")
-
-
-def _warn_missing_plot_configuration(app: SpinnerApp, input_file) -> None:
-    input_file.seek(0)
-    benchmark_data = pickle.load(input_file)
-    input_file.seek(0)
-
-    config = benchmark_data.get("config")
-    applications = getattr(config, "applications", None)
-    if not applications:
-        return
-
-    missing = []
-    for app_name in applications:
-        app_config = applications[app_name]
-        if not getattr(app_config, "plot", []):
-            missing.append(app_name)
-
-    if not missing:
-        return
-
-    missing_names = ", ".join(repr(name) for name in missing)
-    app.print(
-        "[b yellow]WARNING[/]: Missing plot configuration for benchmark "
-        f"application(s): {missing_names}.\n"
-        "Export will still generate a notebook (including dataframe preview via "
-        "df.head()), but chart generation requires a 'plot' section in the "
-        "benchmark file."
-    )
 
 
 # ==============================================================================
@@ -107,7 +78,7 @@ def export(app, input) -> None:
     """Export benchmark data."""
     path = importlib.resources.files("spinner.exporter") / "reporter.ipynb"
     try:
-        _warn_missing_plot_configuration(app, input)
+        warn_missing_plot_configuration(app, input)
     except Exception:
         input.seek(0)
     try:

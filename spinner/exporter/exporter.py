@@ -1,16 +1,45 @@
+import pickle
 import textwrap
 from pathlib import Path
-
-import nbformat
-from nbconvert import HTMLExporter
-from nbconvert.preprocessors import ExecutePreprocessor
 
 import spinner
 from spinner.app import SpinnerApp
 
 
+def warn_missing_plot_configuration(app: SpinnerApp, input_file) -> None:
+    input_file.seek(0)
+    benchmark_data = pickle.load(input_file)
+    input_file.seek(0)
+
+    config = benchmark_data.get("config")
+    applications = getattr(config, "applications", None)
+    if not applications:
+        return
+
+    missing = []
+    for app_name in applications:
+        app_config = applications[app_name]
+        if not getattr(app_config, "plot", []):
+            missing.append(app_name)
+
+    if not missing:
+        return
+
+    missing_names = ", ".join(repr(name) for name in missing)
+    app.print(
+        "[b yellow]WARNING[/]: Missing plot configuration for benchmark "
+        f"application(s): {missing_names}.\n"
+        "Export will still generate a notebook (including dataframe preview via "
+        "df.head()), but chart generation requires a 'plot' section in the "
+        "benchmark file."
+    )
+
+
 def run_reporter(notebook_path, pkl_db_path=None):
-    # Resolve folder and base name (remove .pkl extension)
+    import nbformat
+    from nbconvert import HTMLExporter
+    from nbconvert.preprocessors import ExecutePreprocessor
+
     # Resolve folder and base name (remove .pkl extension)
     pkl_db_path = Path(pkl_db_path)
     pkl_db_folder = pkl_db_path.parent

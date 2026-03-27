@@ -1,7 +1,7 @@
 import pickle
 from types import SimpleNamespace
 
-from spinner.cli.main import _warn_missing_plot_configuration
+from spinner.exporter.exporter import warn_missing_plot_configuration
 
 
 class DummyApp:
@@ -31,7 +31,7 @@ def test_warn_missing_plot_configuration_emits_warning(tmp_path):
         _dump_payload(handle, payload)
         app = DummyApp()
 
-        _warn_missing_plot_configuration(app, handle)
+        warn_missing_plot_configuration(app, handle)
 
     assert len(app.messages) == 1
     assert "WARNING" in app.messages[0]
@@ -52,6 +52,6 @@ def test_warn_missing_plot_configuration_is_silent_when_all_plots_exist(tmp_path
         _dump_payload(handle, payload)
         app = DummyApp()
 
-        _warn_missing_plot_configuration(app, handle)
+        warn_missing_plot_configuration(app, handle)
 
     assert app.messages == []
