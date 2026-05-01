@@ -28,6 +28,7 @@ theme:
 
 plugins:
   - include-markdown
+  - search
 
 markdown_extensions:
   - attr_list
