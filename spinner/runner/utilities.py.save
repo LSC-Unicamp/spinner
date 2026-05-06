@@ -15,6 +15,7 @@ from spinner.schema import SpinnerConfig
 
 
 def run_benchmarks(
+    def run_benchmarks(
     app,
     config,
     output,
@@ -25,38 +26,6 @@ def run_benchmarks(
     """
     Generate execution matrix from input configuration and run all benchmarks.
     """
-
-    if extra is None:
-        extra = {}
-
-    # DRY RUN MODE
-    if dry_run:
-        app.print("[yellow]DRY RUN MODE[/]")
-        app.print("No benchmarks will be executed")
-        app.print("No files will be saved")
-
-        benchmark_items = list(config.benchmarks.items())
-
-        if benchmark is not None:
-            selected = config.benchmarks.get(benchmark)
-
-            if selected is None:
-                raise ValueError(f"Benchmark {benchmark!r} is undefined")
-
-            benchmark_items = [(benchmark, selected)]
-
-        for benchmark_name, benchmark_data in benchmark_items:
-            app.print(f"\n[bold]Benchmark:[/] {benchmark_name}")
-
-            for application_name in benchmark_data.application_names(
-                benchmark_name
-            ):
-                app.print(
-                    f"  -> Would run application: {application_name}"
-                )
-
-        return
-
     # Create DataFrame to store benchmark data
     df = pd.DataFrame(
         columns=[
@@ -73,15 +42,11 @@ def run_benchmarks(
     # Loop through all benchmarks, executing one by one.
     benchmark_items = list(config.benchmarks.items())
     total_jobs = config.num_jobs
-
     if benchmark is not None:
         selected = config.benchmarks[benchmark]
-
         if selected is None:
             raise ValueError(f"Benchmark {benchmark!r} is undefined")
-
         benchmark_items = [(benchmark, selected)]
-
         total_jobs = (
             config.metadata.runs
             * selected.num_jobs
@@ -89,13 +54,8 @@ def run_benchmarks(
         )
 
     with RunnerProgress(app, config, total=total_jobs) as progress:
-
         for benchmark_name, benchmark_data in benchmark_items:
-
-            for application_name in benchmark_data.application_names(
-                benchmark_name
-            ):
-
+            for application_name in benchmark_data.application_names(benchmark_name):
                 runner = InstanceRunner(
                     app,
                     config,
@@ -106,7 +66,6 @@ def run_benchmarks(
                     progress=progress,
                     extra_args=extra,
                 )
-
                 runner.run()
 
     app.print(df)
@@ -120,11 +79,15 @@ def run_benchmarks(
         **extra,
     }
 
-    pickle.dump(
-        {
-            "config": config,
-            "metadata": metadata,
-            "dataframe": df,
-        },
-        output,
-    )
+    if dry_run:
+    app.print("[DRY RUN] Arquivo não será salvo")
+    return
+
+pickle.dump(
+    {
+        "config": config,
+        "metadata": metadata,
+        "dataframe": df,
+    },
+    output,
+)

@@ -1,0 +1,7 @@
+metadata:
+  runs: 1
+
+applications:
+  variables: []
+
+benchmarks: {}

@@ -14,7 +14,6 @@ from spinner.schema import SpinnerConfig
 
 from .util import ExtraArgs
 
-
 # ==============================================================================
 # LOCAL FUNCTIONS
 # ==============================================================================
@@ -22,16 +21,12 @@ from .util import ExtraArgs
 
 def _print_errors(app: SpinnerApp, exception: ValidationError) -> None:
     n = len(exception.errors())
-
     app.print(f"[b red]ERROR[/]: Invalid configuration file ({n} errors)")
 
     for i, error in enumerate(exception.errors(), start=1):
         path = ".".join([str(x) for x in error.get("loc")])
         message = error.get("msg")
-
-        app.print(
-            f"\n{i:3}. Error in [i]{path!r}[/]\n     [dim]{message}[/]"
-        )
+        app.print(f"\n{i:3}. Error in [i]{path!r}[/]\n     [dim]{message}[/]")
 
     app.print("\nPlease fix the above errors and try again.")
 
@@ -40,13 +35,11 @@ def _print_errors(app: SpinnerApp, exception: ValidationError) -> None:
 # COMMAND-LINE INTERFACE
 # ==============================================================================
 
-
 @group()
 @pass_context
 @opt("--verbose", "-v", count=True)
 def cli(ctx, verbose) -> None:
     """Spinner: Reproducible benchmarks."""
-
     app = SpinnerApp.get()
     app.verbosity = verbose
     ctx.obj = app
@@ -56,69 +49,45 @@ def cli(ctx, verbose) -> None:
 @pass_obj
 @arg("CONFIG", type=File("r"))
 @opt("--output", "-o", default="benchdata.pkl", type=File("wb"))
-@opt(
-    "--benchmark",
-    "-b",
-    default=None,
-    help="Run only one benchmark block by name",
-)
+@opt("--benchmark", "-b", default=None, help="Run only one benchmark block by name.")
 @opt("--extra-args", "-e", type=ExtraArgs())
+
 @opt(
     "--dry-run",
     is_flag=True,
-    help="Simulate execution without saving files",
+    help="Simula a execução sem salvar arquivos",
 )
-def run(app, config, output, benchmark, extra_args, dry_run) -> None:
+def run(app, config, output, benchmark, extra_args, dry_run=dry_run ) -> None:
     """Run benchmark from configuration file."""
-
-    if dry_run:
-        app.print("[yellow]DRY RUN MODE[/]")
-        app.print("No benchmarks will be executed")
-        app.print("No files will be saved")
-        return
-
     try:
         config = SpinnerConfig.from_stream(config)
-
     except ValidationError as errors:
         _print_errors(app, errors)
         raise SystemExit(1)
 
     if benchmark and config.benchmarks[benchmark] is None:
-        app.print(f"[red]Benchmark '{benchmark}' not found[/]")
+        app.print(f"[b red]ERROR[/]: Benchmark {benchmark!r} is undefined.")
         raise SystemExit(1)
 
     if not extra_args:
         extra_args = {}
 
-    spinner.runner.run(
-        app,
-        config,
-        output,
-        benchmark=benchmark,
-        extra=extra_args,
-        dry_run=dry_run,
-    )
+    spinner.runner.run(app, config, output, benchmark=benchmark, **extra_args)
 
 
 @cli.command()
 @pass_obj
-@opt("--input", "-i", default="benchdata.pkl", type=File("rb"))
-def export(app, input) -> None:
+@opt("--input", "-i", default="benchdata.pkl", type=File("rb"))def export(app, input) -> None:
     """Export benchmark data."""
-
     path = importlib.resources.files("spinner.exporter") / "reporter.ipynb"
-
     try:
         exporter = importlib.import_module("spinner.exporter")
         exporter.run(path, pkl_db_path=os.path.abspath(input.name))
-
     except (ImportError, RuntimeError) as error:
         app.print(
             "[b red]ERROR[/]: Export requires optional Jupyter dependencies.\n"
             "Install them with 'pip install spinner[exporter]'."
         )
-
         raise SystemExit(1) from error
 
 
