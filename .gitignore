@@ -96,3 +96,5 @@ cython_debug/
 
 # LSP config files
 pyrightconfig.json
+*save
+*.save
