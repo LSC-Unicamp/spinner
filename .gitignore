@@ -1,3 +1,9 @@
+
+venv/
+.venv/
+*.save
+__pycache__/
+.pytest_cache/
 .venv
 .vscode
 random_numbers.bin
