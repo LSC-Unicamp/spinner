@@ -52,10 +52,18 @@ def cli(ctx, verbose) -> None:
 @opt("--output", "-o", default="benchdata.pkl", type=File("wb"))
 @opt("--benchmark", "-b", default=None, help="Run only one benchmark block by name.")
 @opt("--extra-args", "-e", type=ExtraArgs())
-def run(app, config, output, benchmark, extra_args) -> None:
+@opt(
+    "--dry-run",
+    is_flag=True,
+    default=False,
+    help="Preview actions without executing them.",
+)
+def run(app, config, output, benchmark, extra_args, dry_run) -> None:
     """Run benchmark from configuration file."""
+
     try:
         config = SpinnerConfig.from_stream(config)
+
     except ValidationError as errors:
         _print_errors(app, errors)
         raise SystemExit(1)
@@ -67,7 +75,18 @@ def run(app, config, output, benchmark, extra_args) -> None:
     if not extra_args:
         extra_args = {}
 
-    spinner.runner.run(app, config, output, benchmark=benchmark, **extra_args)
+    if dry_run:
+        app.print("[yellow]DRY RUN MODE ENABLED[/yellow]")
+        app.print("[cyan]Skipping benchmark execution[/cyan]")
+        return
+
+    spinner.runner.run(
+        app,
+        config,
+        output,
+        benchmark=benchmark,
+        **extra_args,
+    )
 
 
 @cli.command()
@@ -75,15 +94,19 @@ def run(app, config, output, benchmark, extra_args) -> None:
 @opt("--input", "-i", default="benchdata.pkl", type=File("rb"))
 def export(app, input) -> None:
     """Export benchmark data."""
+
     path = importlib.resources.files("spinner.exporter") / "reporter.ipynb"
+
     try:
         exporter = importlib.import_module("spinner.exporter")
         exporter.run(path, pkl_db_path=os.path.abspath(input.name))
+
     except (ImportError, RuntimeError) as error:
         app.print(
             "[b red]ERROR[/]: Export requires optional Jupyter dependencies.\n"
             "Install them with 'pip install spinner[exporter]'."
         )
+
         raise SystemExit(1) from error
 
 
