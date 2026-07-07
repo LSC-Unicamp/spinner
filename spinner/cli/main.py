@@ -39,10 +39,12 @@ def _print_errors(app: SpinnerApp, exception: ValidationError) -> None:
 @group()
 @pass_context
 @opt("--verbose", "-v", count=True)
-def cli(ctx, verbose) -> None:
+@opt("--dry-run", "-n", is_flag=True, help="Preview operations without executing them.")
+def cli(ctx, verbose, dry_run) -> None:
     """Spinner: Reproducible benchmarks."""
     app = SpinnerApp.get()
     app.verbosity = verbose
+    app.dry_run = dry_run
     ctx.obj = app
 
 

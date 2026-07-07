@@ -19,16 +19,18 @@ DEFAULT_LOG_LEVEL = os.environ.get("LOGLEVEL", "warning").upper()
 
 class SpinnerApp(Console):
     _verbosity: int
+    _dry_run: bool
 
     @staticmethod
     def get() -> Self:
         assert _GLOBAL_APP is not None, "app not initialized"
         return _GLOBAL_APP
 
-    def __init__(self, verbosity=0, *args, **kwargs) -> None:
+    def __init__(self, verbosity=0, dry_run=False, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.logger = logging.getLogger("spinner")
         self.verbosity = verbosity
+        self._dry_run = dry_run
         self.logger.debug("App started.")
 
     @property
@@ -47,6 +49,18 @@ class SpinnerApp(Console):
         root.setLevel(level)
         for handler in root.handlers:
             handler.setLevel(level)
+    
+    @property
+    def dry_run(self) -> bool:
+        """Check if dry-run mode is enabled."""
+        return self._dry_run
+    
+    @dry_run.setter
+    def dry_run(self, value: bool) -> None:
+        """Set dry-run mode."""
+        self._dry_run = value
+        if value:
+            self.logger.info("Dry-run mode enabled")
 
     def __del__(self) -> None:
         self.logger.debug("App finished.")
