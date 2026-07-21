@@ -4,7 +4,6 @@ This module provides a specialized runner that simulates command execution
 without actually running commands, providing detailed logging of what would happen.
 """
 
-import subprocess as sp
 from typing import Any
 
 from spinner.app import SpinnerApp
@@ -87,42 +86,28 @@ class DryRunInstanceRunner(InstanceRunner):
         # Simulate successful execution
         simulated_stdout = f"[Simulated output for: {command}]"
         simulated_stderr = ""
-        simulated_returncode = 0
         simulated_elapsed = 0.001  # Simulate very fast execution
-        simulated_timed_out = False
-        
+
         # Log expected results
         self.dry_run_context.log_expected_result(
             stdout=simulated_stdout,
             stderr=simulated_stderr,
-            returncode=simulated_returncode,
             elapsed=simulated_elapsed,
         )
-        
+
         # Simulate output processing
-        if simulated_returncode == 0 and not simulated_timed_out:
-            output = "\n".join([simulated_stdout, simulated_stderr])
-            captures = self.process_captures_dry_run(output)
-            
-            # Log what would be added to dataframe
-            row_data = {
-                "name": self.application_name,
-                **parameters,
-                **captures,
-                "time": simulated_elapsed,
-            }
-            
-            self.dry_run_context.log_dataframe_update(row_data)
-            
-            # In dry-run mode, we don't actually add to dataframe
-            # Logging disabled for cleaner output
-            # self.app.vprint(
-            #     f"[DRY-RUN] Would add row to dataframe: {row_data}"
-            # )
-        else:
-            self.app.warning(
-                f"[DRY-RUN] Command would fail with return code {simulated_returncode}"
-            )
+        output = "\n".join([simulated_stdout, simulated_stderr])
+        captures = self.process_captures_dry_run(output)
+
+        # Log what would be added to dataframe
+        row_data = {
+            "name": self.application_name,
+            **parameters,
+            **captures,
+            "time": simulated_elapsed,
+        }
+
+        self.dry_run_context.log_dataframe_update(row_data)
         
         # Still update progress to show advancement
         self.progress.step()
@@ -146,58 +131,7 @@ class DryRunInstanceRunner(InstanceRunner):
                 value = f"<simulated_{key}>"
             
             captures[key] = value
-            self.dry_run_context.log_capture(key, value)
-        
+
         return captures
-    
-    def launch_process_with_retry(
-        self,
-        command: str,
-        timeout: float | None = None,
-        retry: int | None = None,
-    ) -> tuple[str, str, int, float, bool]:
-        """Override to prevent actual process execution in dry-run mode.
-        
-        This method should not be called in dry-run mode, but we override it
-        for safety to ensure no actual commands are executed.
-        
-        Args:
-            command: Command string
-            timeout: Timeout value
-            retry: Retry count
-            
-        Returns:
-            Simulated process results
-        """
-        self.app.warning(
-            "[DRY-RUN] launch_process_with_retry called - "
-            "returning simulated results"
-        )
-        return ("[simulated stdout]", "", 0, 0.001, False)
-    
-    def execute_process_with_timeout(
-        self, command: str, timeout: float | None = None
-    ) -> tuple[sp.Popen, float]:
-        """Override to prevent actual process execution in dry-run mode.
-        
-        This method should not be called in dry-run mode, but we override it
-        for safety to ensure no actual commands are executed.
-        
-        Args:
-            command: Command string
-            timeout: Timeout value
-            
-        Returns:
-            Simulated process and elapsed time
-        """
-        self.app.warning(
-            "[DRY-RUN] execute_process_with_timeout called - "
-            "this should not happen in dry-run mode"
-        )
-        # Return a mock object that won't actually execute anything
-        raise RuntimeError(
-            "Attempted to execute process in dry-run mode. "
-            "This is a safety check to prevent actual execution."
-        )
 
 

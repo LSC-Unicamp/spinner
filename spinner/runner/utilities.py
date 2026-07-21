@@ -113,7 +113,7 @@ def run_benchmarks(
 
         pickle.dump({"config": config, "metadata": metadata, "dataframe": df}, output)
     else:
-        # In dry-run mode, log what would be saved
+        # In dry-run mode, log summary of what would have been executed
         app.print("\n[bold yellow]DRY-RUN:[/] Would save results to output file")
         app.print(f"[dim]Output file:[/] {output.name if hasattr(output, 'name') else 'output stream'}")
-        app.print(f"[dim]Total rows that would be saved:[/] {len(df)}")
+        app.print(f"[dim]Total commands simulated:[/] {total_jobs}")

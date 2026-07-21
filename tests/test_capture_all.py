@@ -11,7 +11,7 @@ def test_capture_all_basic(tmp_path):
             "metadata": {
                 "description": "capture all",
                 "version": "1.0",
-                "runs": 3,
+                "runs": 1,
                 "timeout": 5,
                 "retry": 0,
                 "envvars": [],

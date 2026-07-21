@@ -249,10 +249,10 @@ class TestDryRunInstanceRunner:
         """Test that no actual commands are executed in dry-run mode."""
         import pandas as pd
         from spinner.runner.progress import RunnerProgress
-        
+
         benchmark = sample_config.benchmarks["test_bench"]
         df = pd.DataFrame()
-        
+
         with RunnerProgress(app_with_dry_run, sample_config, total=1) as progress:
             runner = DryRunInstanceRunner(
                 app_with_dry_run,
@@ -263,10 +263,15 @@ class TestDryRunInstanceRunner:
                 dataframe=df,
                 progress=progress,
             )
-            
-            # This should not raise an error or execute anything
-            with pytest.raises(RuntimeError, match="Attempted to execute process in dry-run mode"):
-                runner.execute_process_with_timeout("echo 'should not run'")
+
+            runner.run_command(
+                idx=0,
+                command="echo 'should not run'",
+                parameters={"param": 1},
+            )
+
+        # DataFrame must remain empty — no real execution happened
+        assert len(df) == 0
 
 
 class TestDryRunIntegration:

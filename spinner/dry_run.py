@@ -7,7 +7,7 @@ and previewing all operations without executing actual changes.
 from collections import defaultdict
 from contextlib import contextmanager
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from rich.console import Console
 from rich.panel import Panel
@@ -85,8 +85,8 @@ class DryRunContext:
         self,
         command: str,
         parameters: dict[str, Any] | None = None,
-        timeout: Optional[float] = None,
-        retry: Optional[int] = None,
+        timeout: float | None = None,
+        retry: int | None = None,
     ) -> None:
         """Log a command that would be executed with execution count.
         
