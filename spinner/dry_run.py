@@ -87,6 +87,7 @@ class DryRunContext:
         parameters: dict[str, Any] | None = None,
         timeout: float | None = None,
         retry: int | None = None,
+        app_name: str | None = None,
     ) -> None:
         """Log a command that would be executed with execution count.
         
@@ -95,16 +96,18 @@ class DryRunContext:
             parameters: Command parameters
             timeout: Timeout value if set
             retry: Retry count if set
+            app_name: Application name, included in the hash key
         """
         if not self.enabled:
             return
         
-        # Create a hashable key from parameters for counting
+        # Create a hashable key from app name + command + parameters for counting.
+        # Including app_name ensures that two different applications sharing the
+        # same command and parameter set are counted separately.
         if parameters:
-            # Sort parameters to ensure consistent key
-            param_key = tuple(sorted(parameters.items()))
+            param_key = (app_name, command, tuple(sorted(parameters.items())))
         else:
-            param_key = ()
+            param_key = (app_name, command)
         
         # Increment execution count
         self._execution_counts[param_key] += 1
@@ -236,26 +239,11 @@ class DryRunContext:
             if data and self.verbosity >= 2:
                 self.console.print(f"[dim]Data:[/] {data}")
     
-    def log_capture(self, name: str, value: Any) -> None:
-        """Log a captured value from command output.
-        
-        Args:
-            name: Capture name
-            value: Captured value
-        """
-        # Disabled - not showing captured values for cleaner output
-        return
-    
     def log_dataframe_update(
         self,
         row_data: dict[str, Any],
     ) -> None:
-        """Log a DataFrame update operation with vertical display.
-        
-        Args:
-            row_data: Data that would be added to DataFrame
-        """
-        # Disabled - not showing dataframe updates for cleaner output
+        """Log a DataFrame update operation with vertical display."""
         return
     
     def start_summary(self) -> None:
@@ -280,7 +268,7 @@ class DryRunContext:
         if self._command_info:
             self.console.print("\n[bold cyan]Commands to be executed:[/]\n")
             
-            for param_key in sorted(self._command_info.keys()):
+            for param_key in sorted(self._command_info.keys(), key=lambda k: (k[0] or "", k[1])):
                 info = self._command_info[param_key]
                 count = self._execution_counts[param_key]
                 
