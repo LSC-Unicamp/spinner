@@ -84,6 +84,22 @@ def export(app, input) -> None:
         )
         raise SystemExit(1) from error
 
+@cli.command()
+@pass_obj
+@opt("--input", "-i", default="benchdata.pkl", type=File("rb"))
+def chat(app, input) -> None:
+    """Chat with benchmark results using an LLM."""
+    try:
+        chat_module = importlib.import_module("spinner.chat")
+        pkl_path = os.path.abspath(input.name)
+        chat_module.run(pkl_path)
+    except (ImportError, RuntimeError) as error:
+        app.print(
+            "[b red]ERROR[/]: Chat requires optional AI dependencies.\n"
+            "Install them with 'pip install spinner[chat]'."
+        )
+        raise SystemExit(1) from error
+
 
 def main():
     cli()

@@ -22,15 +22,15 @@ class VegaLiteSpec(BaseModel):
     layer: List[VegaLiteLayer]
     data: Dict[Literal["values"], List[dict]]
 
-endpoint = os.getenv("ENDPOINT_URL", "PASTE_YOUR_ENDPOINT_URL")
-deployment = os.getenv("DEPLOYMENT_NAME", "PASTE_YOUR_DEPLOYMENT_NAME")
-subscription_key = os.getenv("AZURE_OPENAI_API_KEY", "PASTE_YOUR_AZURE_OPENAI_KEY")
+endpoint = os.getenv("AZURE_ENDPOINT_URL", "test")
+deployment = os.getenv("AZURE_DEPLOYMENT_NAME", "gpt-oss-120b")
+subscription_key = os.getenv("AZURE_OPENAI_API_KEY", "API_KEY")
 
 # Initialize Azure OpenAI client with key-based authentication
 client = AzureOpenAI(
     azure_endpoint=endpoint,
     api_key=subscription_key,
-    api_version="2024-05-01-preview",
+    api_version="2025-01-01-preview",
 )
 
 def load_spinner_bench(bench_data: Path) -> tuple[pd.DataFrame, dict]:
@@ -65,12 +65,22 @@ def run_ai_exporter(spinner_pkl_path:Path, figure_path:Path):
     spinner_bench = load_spinner_bench(spinner_pkl_path)
 
     apps = spinner_bench['config'].applications
+
+    from collections import namedtuple
+
+    # Plot = namedtuple('Plot', ['x_axis', 'y_axis', 'title', 'hue'])
+
     for app in apps:
         plot = apps[app].plot[0]
+        # plot = Plot(x_axis='batch_size', y_axis='accuracy', title='accuracy x batch_size', hue='model')
 
         instruction = (
             f"Write a Vega Lite JSON that plots a lineplot showing the {plot.y_axis} (y) per {plot.x_axis} (x)"
             f"also agregate the {plot.y_axis} (y axis) using the mean of the samples and plot the error bars of that mean.\n"
+            f"use the {plot.group_by} as hue to ploat a line per model.\n"
+            "Plot only the values with learning rate 'lr' equals to 0.01.\n"
+            "Also, plot only the values with hidden_size equals to 256.\n"
+            f"The x axis must be labeled as '{plot.x_axis}' and the y axis as '{plot.y_axis}'.\n"
             f"The title of the figure must be '{plot.title}'"
             "The dataset is the following:\n"
             f"{spinner_bench['dataframe'].to_markdown(index=False)}"
