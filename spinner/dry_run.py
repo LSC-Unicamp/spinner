@@ -82,19 +82,19 @@ class DryRunContext:
     def log_command(
         self,
         command: str,
+        app_name: str,
         parameters: dict[str, Any] | None = None,
         timeout: float | None = None,
         retry: int | None = None,
-        app_name: str | None = None,
     ) -> None:
         """Log a command that would be executed with execution count.
         
         Args:
             command: The command string
+            app_name: Application name, included in the hash key
             parameters: Command parameters
             timeout: Timeout value if set
             retry: Retry count if set
-            app_name: Application name, included in the hash key
         """
         if not self.enabled:
             return

@@ -81,6 +81,7 @@ class DryRunInstanceRunner(InstanceRunner):
             parameters=parameters,
             timeout=timeout,
             retry=retry,
+            app_name=self.application_name,
         )
         
         # Simulate successful execution

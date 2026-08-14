@@ -92,6 +92,7 @@ class TestDryRunContext:
         ctx = DryRunContext(app_with_dry_run, enabled=True, verbosity=1)
         ctx.log_command(
             command="echo 'test'",
+            app_name="test-app",
             parameters={"param": "value"},
             timeout=5.0,
             retry=2,
@@ -169,12 +170,12 @@ class TestDryRunContext:
         """Test different verbosity levels."""
         # Verbosity 0 - minimal output
         ctx_v0 = DryRunContext(app_with_dry_run, enabled=True, verbosity=0)
-        ctx_v0.log_command("echo test", parameters={"p": "v"})
+        ctx_v0.log_command("echo test", "test-app", parameters={"p": "v"})
         out_v0 = capsys.readouterr().out
         
         # Verbosity 1 - normal output
         ctx_v1 = DryRunContext(app_with_dry_run, enabled=True, verbosity=1)
-        ctx_v1.log_command("echo test", parameters={"p": "v"})
+        ctx_v1.log_command("echo test", "test-app", parameters={"p": "v"})
         out_v1 = capsys.readouterr().out
         
         # Verbosity 2 - detailed output
@@ -317,15 +318,16 @@ class TestDryRunIntegration:
         """Test dry-run mode with different verbosity levels."""
         from click.testing import CliRunner
         from spinner.cli.main import cli
-        
+
         runner = CliRunner()
-        
+
         with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
             config = {
                 "metadata": {
                     "description": "Test",
                     "version": "1.0",
                     "runs": 1,
+                    "timeout": 5.0,
                 },
                 "applications": {
                     "test": {"command": "echo test"}
@@ -336,18 +338,24 @@ class TestDryRunIntegration:
             }
             yaml.dump(config, f)
             config_path = f.name
-        
+
         try:
-            # Test with -v and --dry-run
+            # -v (verbosity=1): parameters, timeout/retry, and expected result
+            # are shown, but simulated stdout is not.
             result = runner.invoke(cli, ['-v', '--dry-run', 'run', config_path])
             output_v1 = result.output
-            
-            # Test with -vv and --dry-run
+            assert "Timeout" in output_v1, "-v should show timeout"
+            assert "Simulated output" not in output_v1, (
+                "-v should NOT show simulated stdout"
+            )
+
+            # -vv (verbosity=2): additionally prints simulated stdout inside
+            # the Expected Result block.
             result = runner.invoke(cli, ['-vv', '--dry-run', 'run', config_path])
             output_v2 = result.output
-            
-            # More verbose output should contain more information
-            assert len(output_v2) >= len(output_v1)
+            assert "Simulated output" in output_v2, (
+                "-vv should show simulated stdout in Expected Result"
+            )
         finally:
             Path(config_path).unlink()
 
@@ -386,7 +394,7 @@ class TestPerformance:
         start = time.time()
         for _ in range(1000):
             ctx.log_operation("test")
-            ctx.log_command("test")
+            ctx.log_command("test", "test-app")
             ctx.log_expected_result()
         elapsed = time.time() - start
         
@@ -407,3 +415,67 @@ class TestPerformance:
         assert elapsed < 0.01  # Should complete in less than 10ms
 
 
+
+
+class TestDryRunCommandKeyBug:
+    """Regression tests for the command-key deduplication bug.
+
+    Before the fix, the key used to aggregate execution counts in
+    ``log_command`` was built from *parameters only*.  Two different
+    applications sharing the same parameter set therefore collided: only
+    the first command was stored in ``_command_info`` and the second was
+    silently dropped from the summary.
+    """
+
+    def test_two_apps_same_params_both_appear_in_summary(self, app_with_dry_run, capsys):
+        """Both commands must be present in the summary when two apps share
+        identical parameters."""
+        ctx = DryRunContext(app_with_dry_run, enabled=True, verbosity=0)
+
+        ctx.log_command(command='echo "A n=1"', app_name="app-A", parameters={"n": 1})
+        ctx.log_command(command='echo "B n=1"', app_name="app-B", parameters={"n": 1})
+
+        # Two distinct (command, params) pairs → two entries in _command_info
+        assert len(ctx._command_info) == 2, (
+            "Expected two separate entries in _command_info for two commands "
+            "with the same parameters, but got one — deduplication bug."
+        )
+
+    def test_two_apps_same_params_independent_execution_counts(self, app_with_dry_run):
+        """Execution counts must be tracked independently per command."""
+        ctx = DryRunContext(app_with_dry_run, enabled=True, verbosity=0)
+
+        for _ in range(3):
+            ctx.log_command(command='echo "A n=1"', app_name="app-A", parameters={"n": 1})
+        for _ in range(2):
+            ctx.log_command(command='echo "B n=1"', app_name="app-B", parameters={"n": 1})
+
+        counts = list(ctx._execution_counts.values())
+        assert sorted(counts) == [2, 3], (
+            f"Expected counts [2, 3] for two distinct commands, got {sorted(counts)}"
+        )
+
+    def test_summary_lists_both_commands(self, app_with_dry_run, capsys):
+        """print_summary must mention both command strings."""
+        ctx = DryRunContext(app_with_dry_run, enabled=True, verbosity=0)
+
+        ctx.log_command(command='echo "A n=1"', app_name="app-A", parameters={"n": 1})
+        ctx.log_command(command='echo "B n=1"', app_name="app-B", parameters={"n": 1})
+
+        capsys.readouterr()  # discard log_command output
+        ctx.print_summary()
+        summary = capsys.readouterr().out
+
+        assert 'echo "A n=1"' in summary, "Command A missing from dry-run summary"
+        assert 'echo "B n=1"' in summary, "Command B missing from dry-run summary"
+
+    def test_same_command_same_params_still_aggregates(self, app_with_dry_run):
+        """The same (command, params) pair must still be counted as one entry
+        with an aggregated execution count — not split into duplicates."""
+        ctx = DryRunContext(app_with_dry_run, enabled=True, verbosity=0)
+
+        for _ in range(4):
+            ctx.log_command(command='echo "A n=1"', app_name="app-A", parameters={"n": 1})
+
+        assert len(ctx._command_info) == 1
+        assert list(ctx._execution_counts.values()) == [4]
