@@ -1,6 +1,7 @@
 import os
 import pickle
 from contextlib import contextmanager
+from pathlib import Path
 from typing import BinaryIO
 
 import pandas as pd
@@ -24,11 +25,6 @@ class _NoOpProgress:
 def _no_progress():
     yield _NoOpProgress()
 
-# ==============================================================================
-# PUBLIC FUNCTIONS
-# ==============================================================================
-
-
 def run_benchmarks(
     app: SpinnerApp,
     config: SpinnerConfig,
@@ -36,10 +32,7 @@ def run_benchmarks(
     benchmark: str | None = None,
     **extra,
 ):
-    """
-    Generate execution matrix from input configuration and run all benchmarks.
-    """
-    # Create DataFrame to store benchmark data
+    """Generate execution matrix from input configuration and run all benchmarks."""
     df = pd.DataFrame(
         columns=[
             "name",
@@ -48,11 +41,9 @@ def run_benchmarks(
         ]
     )
 
-    # Save initial timestamp and environment variables.
     start_ts = pd.Timestamp.now()
     start_env = config.metadata.capture_environment()
 
-    # Loop through all benchmarks, executing one by one.
     benchmark_items = list(config.benchmarks.items())
     total_jobs = config.num_jobs
     if benchmark is not None:
@@ -66,13 +57,27 @@ def run_benchmarks(
             * len(selected.application_names(benchmark))
         )
 
-    # Use dry-run context if dry-run mode is enabled
+    # Probe writability early so a bad output path fails before any work is done.
+    # Only applies to Click LazyFile (_f is None until first write).
+    _probe_path: Path | None = None
+    _probe_created: bool = False
+    if app.dry_run and getattr(output, "_f", True) is None:
+        _probe_path = Path(output.name)
+        if str(_probe_path) not in ("-", "<stdout>"):
+            _probe_created = not _probe_path.exists()
+            try:
+                _probe_path.open("wb").close()
+            except OSError as exc:
+                app.print(f"[b red]ERROR[/]: Cannot write output file: {exc.strerror}: {exc.filename}")
+                raise SystemExit(1) from exc
+
     progress_ctx = _no_progress() if app.dry_run else RunnerProgress(app, config, total=total_jobs)
     with dry_run_context(app, enabled=app.dry_run, verbosity=app.verbosity) as dry_ctx:
+        if app.dry_run and hasattr(output, "name"):
+            dry_ctx.set_output_name(output.name)
         with progress_ctx as progress:
             for benchmark_name, benchmark_data in benchmark_items:
                 for application_name in benchmark_data.application_names(benchmark_name):
-                    # Choose runner based on dry-run mode
                     if app.dry_run:
                         runner = DryRunInstanceRunner(
                             app,
@@ -98,7 +103,6 @@ def run_benchmarks(
                         )
                     runner.run()
 
-    # Only print and save results if not in dry-run mode
     if not app.dry_run:
         app.print(df)
 
@@ -113,7 +117,5 @@ def run_benchmarks(
 
         pickle.dump({"config": config, "metadata": metadata, "dataframe": df}, output)
     else:
-        # In dry-run mode, log summary of what would have been executed
-        app.print("\n[bold yellow]DRY-RUN:[/] Would save results to output file")
-        app.print(f"[dim]Output file:[/] {output.name if hasattr(output, 'name') else 'output stream'}")
-        app.print(f"[dim]Total commands simulated:[/] {total_jobs}")
+        if _probe_path is not None and _probe_created and _probe_path.exists():
+            _probe_path.unlink()

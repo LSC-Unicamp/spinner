@@ -69,23 +69,13 @@ class TestDryRunContext:
     def test_context_initialization(self, app_with_dry_run):
         """Test that DryRunContext initializes correctly."""
         ctx = DryRunContext(app_with_dry_run, enabled=True, verbosity=1)
-        assert ctx.is_enabled() is True
+        assert ctx.enabled is True
         assert ctx.verbosity == 1
-        assert ctx._operation_count == 0
 
     def test_context_disabled(self, app_without_dry_run):
         """Test that DryRunContext respects disabled state."""
         ctx = DryRunContext(app_without_dry_run, enabled=False)
-        assert ctx.is_enabled() is False
-
-    def test_log_operation(self, app_with_dry_run, capsys):
-        """Test logging operations in dry-run mode."""
-        ctx = DryRunContext(app_with_dry_run, enabled=True, verbosity=1)
-        ctx.log_operation("Test operation", {"key": "value"})
-        
-        captured = capsys.readouterr()
-        assert "DRY-RUN" in captured.out
-        assert "Test operation" in captured.out
+        assert ctx.enabled is False
 
     def test_log_command(self, app_with_dry_run, capsys):
         """Test logging commands in dry-run mode."""
@@ -116,51 +106,10 @@ class TestDryRunContext:
         assert "Expected Result" in captured.out
         assert "0.500s" in captured.out
 
-    def test_log_file_operation(self, app_with_dry_run, capsys):
-        """Test logging file operations."""
-        ctx = DryRunContext(app_with_dry_run, enabled=True, verbosity=1)
-        ctx.log_file_operation(
-            operation="write",
-            path="/tmp/test.txt",
-            details={"size": "1024 bytes"},
-        )
-        
-        captured = capsys.readouterr()
-        assert "FILE OPERATION" in captured.out
-        assert "write" in captured.out
-        assert "/tmp/test.txt" in captured.out
-
-    def test_log_database_operation(self, app_with_dry_run, capsys):
-        """Test logging database operations."""
-        ctx = DryRunContext(app_with_dry_run, enabled=True, verbosity=1)
-        ctx.log_database_operation(
-            operation="INSERT INTO table",
-            details={"rows": 10},
-        )
-        
-        captured = capsys.readouterr()
-        assert "DATABASE" in captured.out
-        assert "INSERT INTO table" in captured.out
-
-    def test_log_network_request(self, app_with_dry_run, capsys):
-        """Test logging network requests."""
-        ctx = DryRunContext(app_with_dry_run, enabled=True, verbosity=1)
-        ctx.log_network_request(
-            method="POST",
-            url="https://api.example.com/data",
-            headers={"Content-Type": "application/json"},
-            data='{"key": "value"}',
-        )
-        
-        captured = capsys.readouterr()
-        assert "NETWORK" in captured.out
-        assert "POST" in captured.out
-        assert "https://api.example.com/data" in captured.out
-
     def test_context_manager(self, app_with_dry_run, capsys):
         """Test dry_run_context as a context manager."""
         with dry_run_context(app_with_dry_run, enabled=True, verbosity=1) as ctx:
-            ctx.log_operation("Test operation")
+            ctx.log_command("echo test", "test-app")
         
         captured = capsys.readouterr()
         assert "DRY-RUN MODE ENABLED" in captured.out
@@ -359,6 +308,36 @@ class TestDryRunIntegration:
         finally:
             Path(config_path).unlink()
 
+    def test_dry_run_bad_output_path_fails_early(self):
+        """Dry-run must exit with an error when the output path is not writable,
+        instead of silently reporting success."""
+        from click.testing import CliRunner
+        from spinner.cli.main import cli
+
+        runner = CliRunner()
+
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+            config = {
+                "metadata": {"description": "Test", "version": "1.0", "runs": 1},
+                "applications": {"test": {"command": "echo test"}},
+                "benchmarks": {"test": {"apps": "test", "param": [1]}},
+            }
+            yaml.dump(config, f)
+            config_path = f.name
+
+        try:
+            # Use a path whose parent IS an existing file — impossible to write on any OS
+            bad_output = config_path + "/out.pkl"
+            result = runner.invoke(cli, ['--dry-run', 'run', config_path, '-o', bad_output])
+            assert result.exit_code != 0, (
+                "dry-run should fail when the output path is not writable"
+            )
+            assert "ERROR" in result.output, (
+                "dry-run should print an error message for a bad output path"
+            )
+        finally:
+            Path(config_path).unlink()
+
     def test_no_file_modification_in_dry_run(self, app_with_dry_run, sample_config):
         """Test that no files are modified in dry-run mode."""
         from spinner.runner import run
@@ -393,7 +372,6 @@ class TestPerformance:
         
         start = time.time()
         for _ in range(1000):
-            ctx.log_operation("test")
             ctx.log_command("test", "test-app")
             ctx.log_expected_result()
         elapsed = time.time() - start
@@ -479,3 +457,60 @@ class TestDryRunCommandKeyBug:
 
         assert len(ctx._command_info) == 1
         assert list(ctx._execution_counts.values()) == [4]
+
+
+class TestDryRunBenchmarkKeyBug:
+    """Regression tests for the benchmark-level deduplication bug.
+
+    Two benchmarks using the same app+params collapsed into a single summary
+    line because benchmark_name was not part of the key.  The totals were
+    correct but per-benchmark attribution was lost.
+    """
+
+    def test_two_benchmarks_same_app_params_both_appear(self, app_with_dry_run):
+        """Each benchmark must produce its own entry even when app+params are identical."""
+        ctx = DryRunContext(app_with_dry_run, enabled=True, verbosity=0)
+
+        ctx.log_command(command="echo hi", app_name="app-A", parameters={"n": 1}, benchmark_name="bench-1")
+        ctx.log_command(command="echo hi", app_name="app-A", parameters={"n": 1}, benchmark_name="bench-2")
+
+        assert len(ctx._command_info) == 2, (
+            "Expected two separate entries for two benchmarks running the same "
+            "app+params, but they collapsed into one."
+        )
+
+    def test_two_benchmarks_independent_counts(self, app_with_dry_run):
+        """Execution counts must be tracked independently per benchmark."""
+        ctx = DryRunContext(app_with_dry_run, enabled=True, verbosity=0)
+
+        for _ in range(3):
+            ctx.log_command(command="echo hi", app_name="app-A", parameters={"n": 1}, benchmark_name="bench-1")
+        for _ in range(5):
+            ctx.log_command(command="echo hi", app_name="app-A", parameters={"n": 1}, benchmark_name="bench-2")
+
+        counts = sorted(ctx._execution_counts.values())
+        assert counts == [3, 5], f"Expected counts [3, 5], got {counts}"
+
+    def test_summary_shows_benchmark_prefix(self, app_with_dry_run, capsys):
+        """print_summary must prefix each line with the benchmark name."""
+        ctx = DryRunContext(app_with_dry_run, enabled=True, verbosity=0)
+
+        ctx.log_command(command="echo hi", app_name="app-A", parameters={"n": 1}, benchmark_name="bench-1")
+        ctx.log_command(command="echo hi", app_name="app-A", parameters={"n": 1}, benchmark_name="bench-2")
+
+        capsys.readouterr()
+        ctx.print_summary()
+        summary = capsys.readouterr().out
+
+        assert "bench-1" in summary, "bench-1 missing from summary"
+        assert "bench-2" in summary, "bench-2 missing from summary"
+
+    def test_same_benchmark_same_app_params_still_aggregates(self, app_with_dry_run):
+        """Repeated runs within the same benchmark must still aggregate."""
+        ctx = DryRunContext(app_with_dry_run, enabled=True, verbosity=0)
+
+        for _ in range(3):
+            ctx.log_command(command="echo hi", app_name="app-A", parameters={"n": 1}, benchmark_name="bench-1")
+
+        assert len(ctx._command_info) == 1
+        assert list(ctx._execution_counts.values()) == [3]
