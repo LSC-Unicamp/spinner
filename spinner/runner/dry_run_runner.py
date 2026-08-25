@@ -50,25 +50,8 @@ class DryRunInstanceRunner(InstanceRunner):
             benchmark_name=self.benchmark_name,
         )
 
-        simulated_stdout = f"[Simulated output for: {command}]"
-        simulated_elapsed = 0.001
-
         self.dry_run_context.log_expected_result(
-            stdout=simulated_stdout,
-            elapsed=simulated_elapsed,
+            stdout=f"[Simulated output for: {command}]",
+            elapsed=0.001,
         )
-
-        output = "\n".join([simulated_stdout, ""])
-        self.process_captures_dry_run(output)
         self.progress.step()
-
-    def process_captures_dry_run(self, stdout: str) -> dict[str, Any]:
-        captures = {}
-        for capture in self.application.capture:
-            key, value = capture.process(stdout)
-            if value is None:
-                value = f"<simulated_{key}>"
-            captures[key] = value
-        return captures
-
-

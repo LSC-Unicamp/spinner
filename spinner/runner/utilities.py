@@ -66,7 +66,7 @@ def run_benchmarks(
         if str(_probe_path) not in ("-", "<stdout>"):
             _probe_created = not _probe_path.exists()
             try:
-                _probe_path.open("wb").close()
+                _probe_path.open("ab").close()
             except OSError as exc:
                 app.print(f"[b red]ERROR[/]: Cannot write output file: {exc.strerror}: {exc.filename}")
                 raise SystemExit(1) from exc

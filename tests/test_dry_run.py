@@ -338,25 +338,40 @@ class TestDryRunIntegration:
         finally:
             Path(config_path).unlink()
 
-    def test_no_file_modification_in_dry_run(self, app_with_dry_run, sample_config):
-        """Test that no files are modified in dry-run mode."""
-        from spinner.runner import run
-        
-        # Create a temporary output file
-        with tempfile.NamedTemporaryFile(mode='wb', delete=False) as f:
-            output_path = f.name
-            initial_size = f.tell()
-        
+    def test_no_file_modification_in_dry_run(self):
+        """Dry-run via CLI (-o) must not alter a pre-existing output file."""
+        from click.testing import CliRunner
+        from spinner.cli.main import cli
+
+        sentinel = b"DO NOT TOUCH THIS CONTENT"
+
+        runner = CliRunner()
+
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as cfg_f:
+            config = {
+                "metadata": {"description": "Test", "version": "1.0", "runs": 1},
+                "applications": {"test": {"command": "echo test"}},
+                "benchmarks": {"test": {"apps": "test", "param": [1]}},
+            }
+            yaml.dump(config, cfg_f)
+            config_path = cfg_f.name
+
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False, suffix='.pkl') as out_f:
+            out_f.write(sentinel)
+            output_path = out_f.name
+
         try:
-            # Run in dry-run mode
-            with open(output_path, 'wb') as output:
-                run(app_with_dry_run, sample_config, output)
-            
-            # File should not be modified (or only minimally)
-            final_size = Path(output_path).stat().st_size
-            # In dry-run mode, the file should not have significant data written
-            assert final_size == initial_size or final_size < 100
+            result = runner.invoke(cli, ['--dry-run', 'run', config_path, '-o', output_path])
+            assert result.exit_code == 0, f"dry-run exited with {result.exit_code}:\n{result.output}"
+
+            actual = Path(output_path).read_bytes()
+            assert actual == sentinel, (
+                f"dry-run modified the output file.\n"
+                f"Expected: {sentinel!r}\n"
+                f"Got:      {actual!r}"
+            )
         finally:
+            Path(config_path).unlink()
             Path(output_path).unlink()
 
 
