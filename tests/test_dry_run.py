@@ -1,0 +1,531 @@
+"""Test cases for dry-run mode functionality.
+
+This module tests the comprehensive dry-run mode implementation including
+command logging, parameter display, and result simulation.
+"""
+
+import io
+import tempfile
+from pathlib import Path
+
+import pytest
+import yaml
+
+from spinner.app import SpinnerApp
+from spinner.dry_run import DryRunContext, dry_run_context
+from spinner.runner.dry_run_runner import DryRunInstanceRunner
+from spinner.schema import SpinnerConfig
+
+
+@pytest.fixture
+def sample_config():
+    """Create a sample configuration for testing."""
+    config_data = {
+        "metadata": {
+            "description": "Test benchmark",
+            "version": "1.0.0",
+            "runs": 2,
+            "timeout": 10.0,
+            "retry": 1,
+        },
+        "applications": {
+            "test_app": {
+                "command": "echo 'Testing with param={{param}}'",
+                "capture": [
+                    {
+                        "type": "all",
+                        "name": "output",
+                    }
+                ],
+            }
+        },
+        "benchmarks": {
+            "test_bench": {
+                "apps": "test_app",
+                "param": [1, 2, 3],
+            }
+        },
+    }
+    return SpinnerConfig.from_data(config_data)
+
+
+@pytest.fixture
+def app_with_dry_run():
+    """Create a SpinnerApp with dry-run enabled."""
+    app = SpinnerApp(verbosity=1, dry_run=True)
+    return app
+
+
+@pytest.fixture
+def app_without_dry_run():
+    """Create a SpinnerApp with dry-run disabled."""
+    app = SpinnerApp(verbosity=1, dry_run=False)
+    return app
+
+
+class TestDryRunContext:
+    """Test the DryRunContext class."""
+
+    def test_context_initialization(self, app_with_dry_run):
+        """Test that DryRunContext initializes correctly."""
+        ctx = DryRunContext(app_with_dry_run, enabled=True, verbosity=1)
+        assert ctx.enabled is True
+        assert ctx.verbosity == 1
+
+    def test_context_disabled(self, app_without_dry_run):
+        """Test that DryRunContext respects disabled state."""
+        ctx = DryRunContext(app_without_dry_run, enabled=False)
+        assert ctx.enabled is False
+
+    def test_log_command(self, app_with_dry_run, capsys):
+        """Test logging commands in dry-run mode."""
+        ctx = DryRunContext(app_with_dry_run, enabled=True, verbosity=1)
+        ctx.log_command(
+            command="echo 'test'",
+            app_name="test-app",
+            parameters={"param": "value"},
+            timeout=5.0,
+            retry=2,
+        )
+        
+        captured = capsys.readouterr()
+        assert "COMMAND" in captured.out
+        assert "echo 'test'" in captured.out
+
+    def test_log_expected_result(self, app_with_dry_run, capsys):
+        """Test logging expected results."""
+        ctx = DryRunContext(app_with_dry_run, enabled=True, verbosity=1)
+        ctx.log_expected_result(
+            stdout="test output",
+            stderr="",
+            returncode=0,
+            elapsed=0.5,
+        )
+        
+        captured = capsys.readouterr()
+        assert "Expected Result" in captured.out
+        assert "0.500s" in captured.out
+
+    def test_context_manager(self, app_with_dry_run, capsys):
+        """Test dry_run_context as a context manager."""
+        with dry_run_context(app_with_dry_run, enabled=True, verbosity=1) as ctx:
+            ctx.log_command("echo test", "test-app")
+        
+        captured = capsys.readouterr()
+        assert "DRY-RUN MODE ENABLED" in captured.out
+        assert "DRY-RUN SUMMARY" in captured.out
+
+    def test_verbosity_levels(self, app_with_dry_run, capsys):
+        """Test different verbosity levels."""
+        # Verbosity 0 - minimal output
+        ctx_v0 = DryRunContext(app_with_dry_run, enabled=True, verbosity=0)
+        ctx_v0.log_command("echo test", "test-app", parameters={"p": "v"})
+        out_v0 = capsys.readouterr().out
+        
+        # Verbosity 1 - normal output
+        ctx_v1 = DryRunContext(app_with_dry_run, enabled=True, verbosity=1)
+        ctx_v1.log_command("echo test", "test-app", parameters={"p": "v"})
+        out_v1 = capsys.readouterr().out
+        
+        # Verbosity 2 - detailed output
+        ctx_v2 = DryRunContext(app_with_dry_run, enabled=True, verbosity=2)
+        ctx_v2.log_expected_result(stdout="detailed output", returncode=0, elapsed=1.0)
+        out_v2 = capsys.readouterr().out
+        
+        # Higher verbosity should produce more output
+        assert len(out_v1) >= len(out_v0)
+        assert "Parameters" in out_v1
+
+
+class TestDryRunInstanceRunner:
+    """Test the DryRunInstanceRunner class."""
+
+    def test_runner_initialization(self, app_with_dry_run, sample_config):
+        """Test that DryRunInstanceRunner initializes correctly."""
+        import pandas as pd
+        from spinner.runner.progress import RunnerProgress
+        
+        benchmark = sample_config.benchmarks["test_bench"]
+        df = pd.DataFrame()
+        
+        with RunnerProgress(app_with_dry_run, sample_config, total=1) as progress:
+            runner = DryRunInstanceRunner(
+                app_with_dry_run,
+                sample_config,
+                benchmark_name="test_bench",
+                application_name="test_app",
+                benchmark=benchmark,
+                dataframe=df,
+                progress=progress,
+            )
+            
+            assert runner.app == app_with_dry_run
+            assert runner.benchmark_name == "test_bench"
+            assert runner.application_name == "test_app"
+
+    def test_run_command_simulation(self, app_with_dry_run, sample_config, capsys):
+        """Test that run_command simulates execution without running actual commands."""
+        import pandas as pd
+        from spinner.runner.progress import RunnerProgress
+        
+        benchmark = sample_config.benchmarks["test_bench"]
+        df = pd.DataFrame()
+        
+        with RunnerProgress(app_with_dry_run, sample_config, total=1) as progress:
+            runner = DryRunInstanceRunner(
+                app_with_dry_run,
+                sample_config,
+                benchmark_name="test_bench",
+                application_name="test_app",
+                benchmark=benchmark,
+                dataframe=df,
+                progress=progress,
+            )
+            
+            runner.run_command(
+                idx=0,
+                command="echo 'test'",
+                parameters={"param": 1},
+                timeout=10.0,
+                retry=1,
+            )
+        
+        captured = capsys.readouterr()
+        assert "COMMAND" in captured.out
+        assert "echo 'test'" in captured.out
+        assert "Expected Result" in captured.out
+
+    def test_no_actual_execution(self, app_with_dry_run, sample_config):
+        """Test that no actual commands are executed in dry-run mode."""
+        import pandas as pd
+        from spinner.runner.progress import RunnerProgress
+
+        benchmark = sample_config.benchmarks["test_bench"]
+        df = pd.DataFrame()
+
+        with RunnerProgress(app_with_dry_run, sample_config, total=1) as progress:
+            runner = DryRunInstanceRunner(
+                app_with_dry_run,
+                sample_config,
+                benchmark_name="test_bench",
+                application_name="test_app",
+                benchmark=benchmark,
+                dataframe=df,
+                progress=progress,
+            )
+
+            runner.run_command(
+                idx=0,
+                command="echo 'should not run'",
+                parameters={"param": 1},
+            )
+
+        # DataFrame must remain empty — no real execution happened
+        assert len(df) == 0
+
+
+class TestDryRunIntegration:
+    """Integration tests for dry-run mode."""
+
+    def test_cli_dry_run_flag(self):
+        """Test that CLI accepts --dry-run flag."""
+        from click.testing import CliRunner
+        from spinner.cli.main import cli
+        
+        runner = CliRunner()
+        
+        # Create a temporary config file
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+            config = {
+                "metadata": {
+                    "description": "Test",
+                    "version": "1.0",
+                    "runs": 1,
+                },
+                "applications": {
+                    "test": {"command": "echo test"}
+                },
+                "benchmarks": {
+                    "test": {"apps": "test", "param": [1]}
+                }
+            }
+            yaml.dump(config, f)
+            config_path = f.name
+        
+        try:
+            # Test with --dry-run flag
+            result = runner.invoke(cli, ['--dry-run', 'run', config_path])
+            assert result.exit_code == 0 or "DRY-RUN" in result.output
+            
+            # Test with -n flag (short form)
+            result = runner.invoke(cli, ['-n', 'run', config_path])
+            assert result.exit_code == 0 or "DRY-RUN" in result.output
+        finally:
+            Path(config_path).unlink()
+
+    def test_dry_run_with_verbosity(self):
+        """Test dry-run mode with different verbosity levels."""
+        from click.testing import CliRunner
+        from spinner.cli.main import cli
+
+        runner = CliRunner()
+
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+            config = {
+                "metadata": {
+                    "description": "Test",
+                    "version": "1.0",
+                    "runs": 1,
+                    "timeout": 5.0,
+                },
+                "applications": {
+                    "test": {"command": "echo test"}
+                },
+                "benchmarks": {
+                    "test": {"apps": "test", "param": [1]}
+                }
+            }
+            yaml.dump(config, f)
+            config_path = f.name
+
+        try:
+            # -v (verbosity=1): parameters, timeout/retry, and expected result
+            # are shown, but simulated stdout is not.
+            result = runner.invoke(cli, ['-v', '--dry-run', 'run', config_path])
+            output_v1 = result.output
+            assert "Timeout" in output_v1, "-v should show timeout"
+            assert "Simulated output" not in output_v1, (
+                "-v should NOT show simulated stdout"
+            )
+
+            # -vv (verbosity=2): additionally prints simulated stdout inside
+            # the Expected Result block.
+            result = runner.invoke(cli, ['-vv', '--dry-run', 'run', config_path])
+            output_v2 = result.output
+            assert "Simulated output" in output_v2, (
+                "-vv should show simulated stdout in Expected Result"
+            )
+        finally:
+            Path(config_path).unlink()
+
+    def test_dry_run_bad_output_path_fails_early(self):
+        """Dry-run must exit with an error when the output path is not writable,
+        instead of silently reporting success."""
+        from click.testing import CliRunner
+        from spinner.cli.main import cli
+
+        runner = CliRunner()
+
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+            config = {
+                "metadata": {"description": "Test", "version": "1.0", "runs": 1},
+                "applications": {"test": {"command": "echo test"}},
+                "benchmarks": {"test": {"apps": "test", "param": [1]}},
+            }
+            yaml.dump(config, f)
+            config_path = f.name
+
+        try:
+            # Use a path whose parent IS an existing file — impossible to write on any OS
+            bad_output = config_path + "/out.pkl"
+            result = runner.invoke(cli, ['--dry-run', 'run', config_path, '-o', bad_output])
+            assert result.exit_code != 0, (
+                "dry-run should fail when the output path is not writable"
+            )
+            assert "ERROR" in result.output, (
+                "dry-run should print an error message for a bad output path"
+            )
+        finally:
+            Path(config_path).unlink()
+
+    def test_no_file_modification_in_dry_run(self):
+        """Dry-run via CLI (-o) must not alter a pre-existing output file."""
+        from click.testing import CliRunner
+        from spinner.cli.main import cli
+
+        sentinel = b"DO NOT TOUCH THIS CONTENT"
+
+        runner = CliRunner()
+
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as cfg_f:
+            config = {
+                "metadata": {"description": "Test", "version": "1.0", "runs": 1},
+                "applications": {"test": {"command": "echo test"}},
+                "benchmarks": {"test": {"apps": "test", "param": [1]}},
+            }
+            yaml.dump(config, cfg_f)
+            config_path = cfg_f.name
+
+        with tempfile.NamedTemporaryFile(mode='wb', delete=False, suffix='.pkl') as out_f:
+            out_f.write(sentinel)
+            output_path = out_f.name
+
+        try:
+            result = runner.invoke(cli, ['--dry-run', 'run', config_path, '-o', output_path])
+            assert result.exit_code == 0, f"dry-run exited with {result.exit_code}:\n{result.output}"
+
+            actual = Path(output_path).read_bytes()
+            assert actual == sentinel, (
+                f"dry-run modified the output file.\n"
+                f"Expected: {sentinel!r}\n"
+                f"Got:      {actual!r}"
+            )
+        finally:
+            Path(config_path).unlink()
+            Path(output_path).unlink()
+
+
+class TestPerformance:
+    """Test that dry-run mode has no performance overhead when disabled."""
+
+    def test_no_overhead_when_disabled(self, app_without_dry_run):
+        """Test that there's no performance overhead when dry-run is disabled."""
+        import time
+        
+        # This is a simple check that dry-run code doesn't slow down normal execution
+        ctx = DryRunContext(app_without_dry_run, enabled=False)
+        
+        start = time.time()
+        for _ in range(1000):
+            ctx.log_command("test", "test-app")
+            ctx.log_expected_result()
+        elapsed = time.time() - start
+        
+        # Should be very fast since nothing is actually logged
+        assert elapsed < 0.1  # Should complete in less than 100ms
+
+    def test_dry_run_property_access(self, app_with_dry_run, app_without_dry_run):
+        """Test that accessing dry_run property is fast."""
+        import time
+        
+        start = time.time()
+        for _ in range(10000):
+            _ = app_with_dry_run.dry_run
+            _ = app_without_dry_run.dry_run
+        elapsed = time.time() - start
+        
+        # Property access should be negligible
+        assert elapsed < 0.01  # Should complete in less than 10ms
+
+
+
+
+class TestDryRunCommandKeyBug:
+    """Regression tests for the command-key deduplication bug.
+
+    Before the fix, the key used to aggregate execution counts in
+    ``log_command`` was built from *parameters only*.  Two different
+    applications sharing the same parameter set therefore collided: only
+    the first command was stored in ``_command_info`` and the second was
+    silently dropped from the summary.
+    """
+
+    def test_two_apps_same_params_both_appear_in_summary(self, app_with_dry_run, capsys):
+        """Both commands must be present in the summary when two apps share
+        identical parameters."""
+        ctx = DryRunContext(app_with_dry_run, enabled=True, verbosity=0)
+
+        ctx.log_command(command='echo "A n=1"', app_name="app-A", parameters={"n": 1})
+        ctx.log_command(command='echo "B n=1"', app_name="app-B", parameters={"n": 1})
+
+        # Two distinct (command, params) pairs → two entries in _command_info
+        assert len(ctx._command_info) == 2, (
+            "Expected two separate entries in _command_info for two commands "
+            "with the same parameters, but got one — deduplication bug."
+        )
+
+    def test_two_apps_same_params_independent_execution_counts(self, app_with_dry_run):
+        """Execution counts must be tracked independently per command."""
+        ctx = DryRunContext(app_with_dry_run, enabled=True, verbosity=0)
+
+        for _ in range(3):
+            ctx.log_command(command='echo "A n=1"', app_name="app-A", parameters={"n": 1})
+        for _ in range(2):
+            ctx.log_command(command='echo "B n=1"', app_name="app-B", parameters={"n": 1})
+
+        counts = list(ctx._execution_counts.values())
+        assert sorted(counts) == [2, 3], (
+            f"Expected counts [2, 3] for two distinct commands, got {sorted(counts)}"
+        )
+
+    def test_summary_lists_both_commands(self, app_with_dry_run, capsys):
+        """print_summary must mention both command strings."""
+        ctx = DryRunContext(app_with_dry_run, enabled=True, verbosity=0)
+
+        ctx.log_command(command='echo "A n=1"', app_name="app-A", parameters={"n": 1})
+        ctx.log_command(command='echo "B n=1"', app_name="app-B", parameters={"n": 1})
+
+        capsys.readouterr()  # discard log_command output
+        ctx.print_summary()
+        summary = capsys.readouterr().out
+
+        assert 'echo "A n=1"' in summary, "Command A missing from dry-run summary"
+        assert 'echo "B n=1"' in summary, "Command B missing from dry-run summary"
+
+    def test_same_command_same_params_still_aggregates(self, app_with_dry_run):
+        """The same (command, params) pair must still be counted as one entry
+        with an aggregated execution count — not split into duplicates."""
+        ctx = DryRunContext(app_with_dry_run, enabled=True, verbosity=0)
+
+        for _ in range(4):
+            ctx.log_command(command='echo "A n=1"', app_name="app-A", parameters={"n": 1})
+
+        assert len(ctx._command_info) == 1
+        assert list(ctx._execution_counts.values()) == [4]
+
+
+class TestDryRunBenchmarkKeyBug:
+    """Regression tests for the benchmark-level deduplication bug.
+
+    Two benchmarks using the same app+params collapsed into a single summary
+    line because benchmark_name was not part of the key.  The totals were
+    correct but per-benchmark attribution was lost.
+    """
+
+    def test_two_benchmarks_same_app_params_both_appear(self, app_with_dry_run):
+        """Each benchmark must produce its own entry even when app+params are identical."""
+        ctx = DryRunContext(app_with_dry_run, enabled=True, verbosity=0)
+
+        ctx.log_command(command="echo hi", app_name="app-A", parameters={"n": 1}, benchmark_name="bench-1")
+        ctx.log_command(command="echo hi", app_name="app-A", parameters={"n": 1}, benchmark_name="bench-2")
+
+        assert len(ctx._command_info) == 2, (
+            "Expected two separate entries for two benchmarks running the same "
+            "app+params, but they collapsed into one."
+        )
+
+    def test_two_benchmarks_independent_counts(self, app_with_dry_run):
+        """Execution counts must be tracked independently per benchmark."""
+        ctx = DryRunContext(app_with_dry_run, enabled=True, verbosity=0)
+
+        for _ in range(3):
+            ctx.log_command(command="echo hi", app_name="app-A", parameters={"n": 1}, benchmark_name="bench-1")
+        for _ in range(5):
+            ctx.log_command(command="echo hi", app_name="app-A", parameters={"n": 1}, benchmark_name="bench-2")
+
+        counts = sorted(ctx._execution_counts.values())
+        assert counts == [3, 5], f"Expected counts [3, 5], got {counts}"
+
+    def test_summary_shows_benchmark_prefix(self, app_with_dry_run, capsys):
+        """print_summary must prefix each line with the benchmark name."""
+        ctx = DryRunContext(app_with_dry_run, enabled=True, verbosity=0)
+
+        ctx.log_command(command="echo hi", app_name="app-A", parameters={"n": 1}, benchmark_name="bench-1")
+        ctx.log_command(command="echo hi", app_name="app-A", parameters={"n": 1}, benchmark_name="bench-2")
+
+        capsys.readouterr()
+        ctx.print_summary()
+        summary = capsys.readouterr().out
+
+        assert "bench-1" in summary, "bench-1 missing from summary"
+        assert "bench-2" in summary, "bench-2 missing from summary"
+
+    def test_same_benchmark_same_app_params_still_aggregates(self, app_with_dry_run):
+        """Repeated runs within the same benchmark must still aggregate."""
+        ctx = DryRunContext(app_with_dry_run, enabled=True, verbosity=0)
+
+        for _ in range(3):
+            ctx.log_command(command="echo hi", app_name="app-A", parameters={"n": 1}, benchmark_name="bench-1")
+
+        assert len(ctx._command_info) == 1
+        assert list(ctx._execution_counts.values()) == [3]
